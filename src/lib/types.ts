@@ -1,0 +1,527 @@
+/**
+ * 공유 타입 — `src-tauri/src/commands.rs` 와 `crates/soul-core` 의 serde 표현을 그대로 미러링한다.
+ *
+ * ## 규칙
+ * - 필드명은 **Rust 필드명 그대로**다. serde `rename` 이 없으므로 snake_case 를 유지한다.
+ * - `Option<T>` → `T | null`. `undefined` 로 쓰지 않는다.
+ * - `Vec<(A, B)>` → `[A, B][]`.
+ * - `BTreeMap<String, f64>` → `Record<string, number>`.
+ * - 여기에는 **판단이 없다.** 값은 전부 Rust 가 준 것을 그대로 담는다 (§2).
+ */
+
+// ───────────────────────────────────────────────────────── 열거값 (§6.2 · §6.3)
+
+/** §6.2 — `Kind`. serde `rename_all = "lowercase"`. */
+export const KINDS = ["text", "image", "audio", "video"] as const;
+export type Kind = (typeof KINDS)[number];
+
+/** §6.2 — `Quality`. **모델이 아니라 파이프라인이 정한다.** */
+export const QUALITIES = ["full", "partial", "minimal"] as const;
+export type Quality = (typeof QUALITIES)[number];
+
+/**
+ * §6.3 — **`yes` | `no` 뿐이다.**
+ * 중간 선택지를 추가하지 말 것 (§18-6 · T56 · T59). 망설이는 항목은 카드를 넘긴다.
+ */
+export const VERDICTS = ["yes", "no"] as const;
+export type Verdict = (typeof VERDICTS)[number];
+
+/** §6.3 — 응답이 걸리는 층. `cultural` 의 target 은 `ingest` 가 아니라 `context` 다. */
+export const LAYERS = ["sensory", "cultural"] as const;
+export type Layer = (typeof LAYERS)[number];
+
+/** §7 — 8축. **이 순서가 곧 `SOUL.md` 표의 행 순서이자 `axes_change` 의 인덱스 순서다** (§8.2.1). */
+export const AXES = [
+  "chroma",
+  "luminance",
+  "density",
+  "grain",
+  "tempo",
+  "space",
+  "valence",
+  "intensity",
+] as const;
+export type AxisName = (typeof AXES)[number];
+
+/** §12.6 — 2×2 셀. serde `rename_all = "snake_case"`. */
+export const CELLS = ["read", "other_reason", "wrong_words", "unread"] as const;
+export type CellName = (typeof CELLS)[number];
+
+// ─────────────────────────────────────────── soul-core 미러 (§7 · §12)
+
+/** §6.2 — 8축 값. 전부 필수, 각 `[0,1]`. */
+export interface Axes {
+  chroma: number;
+  luminance: number;
+  density: number;
+  grain: number;
+  tempo: number;
+  space: number;
+  valence: number;
+  intensity: number;
+}
+
+/** §12.6 — 셀 개수. */
+export interface CellCounts {
+  read: number;
+  other_reason: number;
+  wrong_words: number;
+  unread: number;
+}
+
+/** §12.6 — 방향의 일관성. 창은 전체 기간이다. */
+export interface Coherence {
+  /** 0 = 무작위, 1 = 완전 일관. */
+  value: number;
+  /** `prose` 가 있는 reading 수. */
+  sample: number;
+  /** 대표 사례 3건의 **target** ID. */
+  examples: string[];
+  /** `value >= 0.4 && sample >= 5`. Rust 가 판정한 값이다 — 프런트가 다시 재지 않는다. */
+  systematic: boolean;
+}
+
+/** §12.5 `state_at(month)` 의 반환값. `month` 는 `"2026-06"` 형식이다. */
+export interface MonthState {
+  month: string;
+  /** 직전 달 centroid 와의 코사인 거리. 어느 쪽이든 3건 미만이면 `null`. */
+  drift: number | null;
+  /** 누적 집합 군집의 실루엣 계수 평균. 군집이 없으면 `null`. */
+  crystal: number | null;
+  /** 이 달 말까지의 누적 ingest 수. */
+  n: number;
+}
+
+/** §12.2 — 축별 90일 변화. 길이 8, 순서는 `AXES` 와 같다. 표본 부족 축은 `null`. */
+export type AxesChange = [
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+  number | null,
+];
+
+/**
+ * §R11 — "이 관측부터 프롬프트가 달라졌다"는 지점 하나.
+ *
+ * `kind`가 붙어 있는 이유: `ingest`는 `describe.md`의 해시를, `soul_delta`는
+ * `reflect.md`의 해시를 들고 있다. 서로 비교할 수 있는 값이 아니므로 종류를 잃으면
+ * 사용자가 두 구분선을 같은 축으로 읽는다.
+ */
+export interface PromptBoundary {
+  id: string;
+  kind: "ingest" | "soul_delta";
+  sha256: string;
+}
+
+/**
+ * §12 — `SOUL.md` 와 대시보드가 읽는 파생값 전부.
+ *
+ * **읽기만 한다.** 대시보드는 여기 없는 값을 그리지 않고, 없는 값을 0으로 채워
+ * 가짜 차트를 만들지 않는다 (§13 화면 5).
+ */
+export interface Derived {
+  /** §R1 — 시간 기준점 (`2026-08-13T09:12:33.123Z`). 관측이 없으면 `null`. */
+  t_ref: string | null;
+  t_first: string | null;
+  /** supersede 되지 않은 ingest 수 (§R9). */
+  observation_count: number;
+  /** 전체 관측 수(모든 타입). */
+  total_observation_count: number;
+
+  /** §12.1 — `clamp(computed + offset, 0, 1)`. **화면에 표시하는 값은 이것이다.** */
+  axes_final: Axes | null;
+  axes_computed: Axes | null;
+  axes_offset: Axes;
+  axes_change: AxesChange;
+
+  cells: CellCounts;
+  /** 최근 30일 셀 추이 (대시보드 패널 2의 화살표용). */
+  cells_recent30: CellCounts;
+  /** §12.6 — 대시보드에는 싣지 않는다. 화면 5는 2×2 격자만 둔다. */
+  divergence_sensory: number | null;
+  divergence_cultural: number | null;
+  coherence_sensory: Coherence | null;
+  coherence_cultural: Coherence | null;
+
+  /** §12.5 — 월별 상태. `M` 전체. 대시보드 패널 1이 시간순으로 잇는다. */
+  timeline: MonthState[];
+  crystal_now: number | null;
+  misread_ratio: number | null;
+
+  /** §R11 — `prompt_sha256`이 바뀌는 지점. 패널 1·3이 세로 구분선을 긋는다. */
+  prompt_boundaries: PromptBoundary[];
+}
+
+// ───────────────────────────────────────────────── config.toml (§9.8 · §19.9)
+
+export interface ApiConfig {
+  base_url: string;
+  timeout_secs: number;
+}
+
+/** §9.9 — 네 슬롯 전부 기본값이 **빈 문자열**이다. */
+export interface ModelsConfig {
+  vision: string;
+  audio: string;
+  text: string;
+  reflect: string;
+}
+
+export const MODEL_SLOTS = ["vision", "audio", "text", "reflect"] as const;
+export type ModelSlot = (typeof MODEL_SLOTS)[number];
+
+export interface EmbedConfig {
+  model: string;
+  /** §20.2 — Matryoshka 절단. 1536으로 되돌리지 않는다. */
+  dims: number;
+}
+
+export interface PrivacyConfig {
+  show_boundary_on_first_run: boolean;
+  boundary_acknowledged: boolean;
+}
+
+export interface YoutubeConfig {
+  api_key: string;
+  /** §9.3 · §21-4 — 기본값 false. 사용자가 명시적으로 켠다. */
+  download_enabled: boolean;
+}
+
+export interface SearchConfig {
+  /** `duckduckgo` | `brave` | `tavily` */
+  provider: string;
+  api_key: string;
+  max_results: number;
+}
+
+export interface Thresholds {
+  reflect_trigger_ingests: number;
+  axis_delta_max: number;
+  agent_max_turns_reflect: number;
+  agent_max_turns_critique: number;
+  agent_timeout_critique_secs: number;
+  /** §D6 · §9.10 — false 면 문화 층 전체 비활성화. 2×2의 절반을 잃는다. */
+  context_enabled: boolean;
+  critique_concurrency: number;
+  audio_cap_seconds: number;
+  video_max_seconds: number;
+  video_fps: number;
+  video_max_frames: number;
+  image_max_edge_px: number;
+  agent_max_searches_critique: number;
+  list_observations_max: number;
+}
+
+export interface LocalConfig {
+  silhouette_max_samples: number;
+  thumb_max_edge_px: number;
+}
+
+export interface McpConfig {
+  enabled: boolean;
+  max_recall_limit: number;
+  prose_max_chars: number;
+}
+
+export interface Config {
+  api: ApiConfig;
+  models: ModelsConfig;
+  embed: EmbedConfig;
+  privacy: PrivacyConfig;
+  youtube: YoutubeConfig;
+  search: SearchConfig;
+  thresholds: Thresholds;
+  local: LocalConfig;
+  mcp: McpConfig;
+}
+
+// ──────────────────────────────────────────────────────── doctor (§9.9)
+
+export interface SlotCheck {
+  slot: string;
+  model: string;
+  ok: boolean;
+  error: string | null;
+}
+
+export interface DoctorReport {
+  api_key_set: boolean;
+  models_available: string[];
+  slots: SlotCheck[];
+  embed_ok: boolean | null;
+  embed_error: string | null;
+  /** 실행 파일 경로. 없으면 `null` → 조달 흐름 (§9.7). */
+  ffmpeg: string | null;
+  ffprobe: string | null;
+  ytdlp: string | null;
+  git_ok: boolean;
+  soul_md_ok: boolean;
+  /** §9.6 — 30장 호출이 가능한가. */
+  multi_image_ok: boolean | null;
+}
+
+// ────────────────────────────────────────── commands.rs 미러 (§13)
+
+/** §9.9 · §D7 — 앱 시작 시 가장 먼저 읽는 값. */
+export interface SetupStatus {
+  first_run: boolean;
+  /** §D7 — 첫 투입 전에 §D2 표를 보여야 하는가. */
+  needs_boundary_notice: boolean;
+  api_key_set: boolean;
+  models_unset: boolean;
+  context_enabled: boolean;
+}
+
+/** `secrets_status()` 의 한 줄. `[계정, 설정되어 있는가]` — **값은 절대 오지 않는다** (§2). */
+export type SecretStatus = [account: string, isSet: boolean];
+
+/** §13 화면 2 — 감각 글귀 카드. 미응답 카드는 영속화하지 않는다. */
+export interface SensoryCard {
+  ingest_id: string;
+  prose: string;
+  thumb_data_url: string | null;
+  kind: string;
+  /** §9.3 — YouTube 추정 결과. true 면 한 탭으로 뒤집을 수 있다. */
+  kind_is_guess: boolean;
+}
+
+export interface SourceLink {
+  url: string;
+  title: string;
+}
+
+/** §13 화면 2.1 — 문화 글귀 카드. 미응답 시에도 유지된다 (T53). */
+export interface CulturalCard {
+  context_id: string;
+  ingest_id: string;
+  critique: string;
+  lineage: string[];
+  /** false 면 카드 상단에 `NOT_GROUNDED_NOTICE` 를 표시한다 (T58). */
+  grounded: boolean;
+  sources: SourceLink[];
+  thumb_data_url: string | null;
+}
+
+/** §8.3 규칙 7 — `gen_blocks_modified` 가 비어 있지 않으면 "재빌드 시 덮어써집니다". */
+export interface SaveResult {
+  profile_edits: number;
+  commits: number;
+  gen_blocks_modified: string[];
+}
+
+/** §13 화면 4 — 승인 diff. */
+export interface ProposalView {
+  /**
+   * 좌우 diff **표시**용 전문. `soul:human` 이 들어 있다.
+   *
+   * 화면에 그리는 것은 §D4 대상이 아니다(목적지가 로컬 화면이다). 다만 **편집 상자에
+   * 넣지 말 것** — 사용자가 고친 전문이 승인으로 돌아가면 `soul:human` 이
+   * `soul_delta` 에 실리고, 그 뒤 성찰 호출마다 원격으로 나간다 (§18-4·T29).
+   */
+  current_text: string;
+  proposed_text: string;
+  /** 편집 상자가 바인딩하는 값 — `profile` 블록 본문**만**이다 (§D4). */
+  current_profile_text: string;
+  proposed_profile_text: string;
+  /** 키는 `AxisName`. 없는 축은 키 자체가 없다 (§6.6). */
+  axis_delta: Record<string, number>;
+  cites: string[];
+  rationale: string;
+}
+
+/**
+ * §13 화면 6 — 아카이브 질의.
+ *
+ * **모든 필드가 필수다.** Rust 쪽 `ArchiveQuery` 는 `#[serde(default)]` 가 아니라
+ * `#[derive(Default)]` 만 달려 있어, 빠진 키가 있으면 역직렬화가 실패한다.
+ * 항상 `emptyArchiveQuery()` 로 시작해서 필요한 필드만 덮어써라.
+ *
+ * **어떤 필터도 API를 호출하지 않는다** (T68).
+ */
+export interface ArchiveQuery {
+  kinds: string[];
+  cells: string[];
+  cluster: number | null;
+  surprisal_min: number | null;
+  surprisal_max: number | null;
+  /** `"2026-06"` 형식. */
+  months: string[];
+  tags: string[];
+  qualities: string[];
+  /** 부분 문자열 일치만. **의미 검색은 없다.** */
+  search: string | null;
+  /** 산점도 가로축. `AxisName`. */
+  x_axis: string | null;
+  /** 산점도 세로축. `AxisName`. */
+  y_axis: string | null;
+}
+
+/** 모든 키가 채워진 빈 질의. `archive_query` 는 이것을 기반으로 만든다. */
+export function emptyArchiveQuery(): ArchiveQuery {
+  return {
+    kinds: [],
+    cells: [],
+    cluster: null,
+    surprisal_min: null,
+    surprisal_max: null,
+    months: [],
+    tags: [],
+    qualities: [],
+    search: null,
+    x_axis: null,
+    y_axis: null,
+  };
+}
+
+/** §13 화면 6 — 산점도 타일 하나. */
+export interface ArchiveItem {
+  id: string;
+  kind: string;
+  /** 없으면 프런트가 `prose` 앞 40자를 렌더한다 (T70c · §20.4). */
+  thumb_data_url: string | null;
+  prose: string;
+  tags: string[];
+  surprisal: number;
+  quality: string;
+  /** `CellName` 또는 `null`(미완성 — 한 층이 미응답이거나 문화 글귀가 없다). */
+  cell: string | null;
+  cluster: number | null;
+  /** `x_axis` / `y_axis` 좌표. **Rust 가 이미 계산해서 준 값이다.** */
+  x: number;
+  y: number;
+  /** 구조 보기(PCA) 좌표. 없으면 구조 보기에서 제외한다. */
+  px: number | null;
+  py: number | null;
+  month: string;
+}
+
+/** 항목 상세의 한 층. */
+export interface ReadingView {
+  /** `Verdict`. */
+  verdict: string;
+  prose: string | null;
+  divergence: number | null;
+}
+
+/** §13 화면 6 — 항목 상세. 두 글귀를 나란히 놓는 것이 이 화면의 핵심이다. */
+export interface ItemDetail {
+  item: ArchiveItem;
+  /** `source.origin` — `file://…` · watch URL · `clipboard:…` (§6.2). */
+  origin: string;
+  sensory_prose: string;
+  sensory_reading: ReadingView | null;
+  context: CulturalCard | null;
+  cultural_reading: ReadingView | null;
+  /** §9.10 — true 면 "문화 글귀 없음" 과 재시도 버튼을 둔다. */
+  context_failed: boolean;
+  /** §9.3 — true 면 kind 뒤집기 버튼을 둔다. */
+  can_recast: boolean;
+}
+
+// ────────────────────────────────────────────────── UI 문구 (§13 · §12.6)
+
+/**
+ * §13 — 버튼 문구는 **층마다 다르다.** 명세에 적힌 문구를 그대로 쓴다.
+ * 두 층 모두 **버튼은 정확히 2개**다 (§6.3 · T59).
+ */
+export const VERDICT_LABELS: Record<Layer, Record<Verdict, string>> = {
+  sensory: { yes: "그렇다", no: "아니다" },
+  cultural: { yes: "그래서 좋다", no: "그것 때문은 아니다" },
+};
+
+/** §13 화면 2.1 — `grounded === false` 일 때 카드 상단 문구 (T58). */
+export const NOT_GROUNDED_NOTICE = "근거를 충분히 찾지 못했습니다";
+
+/** §12.6 표의 "뜻" 열. */
+export const CELL_MEANINGS: Record<CellName, string> = {
+  read: "기계가 이 사람을 읽었다",
+  other_reason: "보는 것은 같으나 끌리는 이유가 다르다",
+  wrong_words: "서술은 빗나갔어도 무엇이 중요한지는 통한다",
+  unread: "아직 못 잡았다",
+};
+
+/** §12.6 — `(감각, 문화)` 판정 조합. 셀 격자의 축 라벨에 쓴다. */
+export const CELL_VERDICTS: Record<CellName, [sensory: Verdict, cultural: Verdict]> = {
+  read: ["yes", "yes"],
+  other_reason: ["yes", "no"],
+  wrong_words: ["no", "yes"],
+  unread: ["no", "no"],
+};
+
+/** §13 화면 6 — 셀 패싯의 다섯 번째 값. `ArchiveItem.cell === null` 에 해당한다. */
+export const CELL_INCOMPLETE_LABEL = "미완성";
+
+/** §7 표의 `0` / `1` 극 설명. 명세 문구 그대로다. */
+export const AXIS_POLES: Record<AxisName, [low: string, high: string]> = {
+  chroma: ["무채색에 가까움", "채도가 높고 색이 강함"],
+  luminance: ["어둡고 그늘짐", "밝고 빛이 많음"],
+  density: ["비어 있고 여백이 많음", "요소가 빽빽하게 들어참"],
+  grain: ["매끄럽고 깨끗함", "거칠고 노이즈·질감이 두드러짐"],
+  tempo: ["멈춰 있고 느림", "빠르고 급함"],
+  space: ["평면적이고 가까움", "깊고 멀고 트여 있음"],
+  valence: ["불안하고 서늘함", "안온하고 따뜻함"],
+  intensity: ["은은하고 조용함", "강렬하고 압도적임"],
+};
+
+/** §13 화면 6 — 산점도 기본 축 조합. */
+export const DEFAULT_X_AXIS: AxisName = "grain";
+export const DEFAULT_Y_AXIS: AxisName = "valence";
+
+/** §13 화면 6 — 이 수를 넘으면 썸네일 대신 단색 점을 찍는다. */
+export const TILE_RENDER_LIMIT = 200;
+
+/** §20.4 · T70c — 썸네일이 없는 타일에 렌더할 서술문 길이. */
+export const TILE_PROSE_CHARS = 40;
+
+// ───────────────────────────────────────────────── 렌더 헬퍼 (§R10)
+
+/** §R10 — `null` 파생값의 표기. 0으로 대체하거나 항목을 생략하지 않는다. */
+export const EM_DASH = "—";
+
+/** 수치를 소수 `digits` 자리로 렌더한다. `null`/`undefined`/`NaN` 은 `—`. */
+export function dash(v: number | null | undefined, digits = 2): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return EM_DASH;
+  return v.toFixed(digits);
+}
+
+/** 변화량을 부호와 함께 렌더한다 (§8.2.1). `null` 은 `—`. */
+export function dashSigned(v: number | null | undefined, digits = 2): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return EM_DASH;
+  return (v < 0 ? "−" : "+") + Math.abs(v).toFixed(digits);
+}
+
+/** 문자열을 렌더한다. 비었거나 `null` 이면 `—`. */
+export function dashText(v: string | null | undefined): string {
+  if (v === null || v === undefined || v.trim() === "") return EM_DASH;
+  return v;
+}
+
+/** `2026-08-13T09:12:33.123Z` → `2026-08-13` (UTC 기준, §8.2.1). */
+export function dashDate(ts: string | null | undefined): string {
+  if (!ts) return EM_DASH;
+  const d = ts.slice(0, 10);
+  return d.length === 10 ? d : EM_DASH;
+}
+
+// ────────────────────────────────────────── 화면 컴포넌트 계약
+
+/**
+ * `App.tsx` 가 import 하는 화면 컴포넌트의 공통 계약.
+ *
+ * **모든 화면은 named export 이며 props 를 받지 않는다.** 각 화면이 `lib/api.ts` 로
+ * 직접 자기 데이터를 가져온다. 셸은 탭 전환과 §D7 고지 게이트만 맡는다.
+ */
+export type ScreenComponent = () => JSX.Element | null;
+
+/** §D7 고지 화면만 예외적으로 콜백을 받는다. */
+export interface BoundaryNoticeProps {
+  /**
+   * 사용자가 §D2 표를 확인하고 `acknowledge_boundary(context_enabled)` 가
+   * 성공한 뒤에 부른다. 셸이 `setup_status()` 를 다시 읽고 본 화면으로 넘어간다.
+   */
+  onDone: () => void;
+}

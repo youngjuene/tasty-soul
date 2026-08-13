@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/soul-core",
+  "crates/soul-media",
+  "crates/soul-net",
+  "crates/soul-agent",
+  "crates/soul-pipeline",
+  "crates/soul-cli",
+  "crates/soul-mcp",
+  "src-tauri",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT"
+
+[profile.release]
+lto = "thin"
+strip = true

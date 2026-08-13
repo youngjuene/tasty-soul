@@ -1,0 +1,21 @@
+[package]
+name = "soul-net"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+base64 = "0.23.1"
+chrono = "0.4.45"
+futures-util = "0.3.34"
+hex = "0.4.3"
+keyring = { version = "4.1.6", features = ["apple-native-keyring-store", "windows-native-keyring-store"] }
+reqwest = { version = "0.13.4", features = ["json"] }
+scraper = "0.27.0"
+serde = "1.0.229"
+serde_json = "1.0.151"
+sha2 = "0.11.0"
+soul-core = { version = "0.1.0", path = "../soul-core" }
+thiserror = "2.0.20"
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "fs", "process", "time", "io-util"] }
+url = "2.5.8"

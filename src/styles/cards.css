@@ -1,0 +1,607 @@
+/* 화면 1 · 2 · 2.1 — 투입과 두 장의 카드 (§13).
+ *
+ * 어둡고 조용한 도구다. 취향 기록을 다루므로 화려하지 않게.
+ * 라이트/다크 모두 대응한다. CSS-in-JS를 쓰지 않는다.
+ *
+ * 모든 토큰과 클래스는 `--ts-` / `.ts-` 로 namespace 한다.
+ * 다른 화면의 스타일시트와 충돌하지 않게 하기 위함이다.
+ */
+
+:root {
+  --ts-bg: #f6f6f4;
+  --ts-panel: #fdfdfc;
+  --ts-panel-2: #f0f0ec;
+  --ts-fg: #1c1c1a;
+  --ts-fg-2: #4a4a45;
+  --ts-dim: #7d7d75;
+  --ts-line: #e0e0da;
+  --ts-line-2: #cfcfc7;
+  --ts-accent: #4f6b5e;
+  --ts-accent-fg: #f6f6f4;
+  --ts-warn: #8a6a34;
+  --ts-error: #8c4a42;
+  --ts-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.04);
+  --ts-radius: 10px;
+  --ts-font: ui-sans-serif, -apple-system, "Segoe UI", "Noto Sans KR",
+    "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --ts-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ts-bg: #141413;
+    --ts-panel: #1b1b1a;
+    --ts-panel-2: #232321;
+    --ts-fg: #e9e7e2;
+    --ts-fg-2: #c2bfb8;
+    --ts-dim: #8b8880;
+    --ts-line: #2b2b28;
+    --ts-line-2: #3a3a36;
+    --ts-accent: #8fae9d;
+    --ts-accent-fg: #14201a;
+    --ts-warn: #c8a165;
+    --ts-error: #cf8b81;
+    --ts-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* ───────────────────────────────────────────────────────────── 공통 */
+
+.ts-screen {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 40px 28px 72px;
+  background: var(--ts-bg);
+  color: var(--ts-fg);
+  font-family: var(--ts-font);
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ts-screen *,
+.ts-screen *::before,
+.ts-screen *::after {
+  box-sizing: border-box;
+}
+
+.ts-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.ts-h {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.ts-sub {
+  margin: 0;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+}
+
+.ts-muted {
+  color: var(--ts-dim);
+}
+
+.ts-kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 4px;
+  background: var(--ts-panel-2);
+  color: var(--ts-fg-2);
+  font-family: var(--ts-mono);
+  font-size: 11.5px;
+}
+
+/* null 파생값 — §R10. 0으로 대체하지 않는다. */
+.ts-null {
+  color: var(--ts-dim);
+}
+
+.ts-error-text {
+  color: var(--ts-error);
+  font-size: 12.5px;
+}
+
+/* ───────────────────────────────────────────── 화면 1 — 투입 (§13-1) */
+
+.ts-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 220px;
+  margin: 26px 0 0;
+  padding: 32px 24px;
+  border: 1px dashed var(--ts-line-2);
+  border-radius: var(--ts-radius);
+  background: var(--ts-panel);
+  text-align: center;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.ts-drop--over {
+  border-color: var(--ts-accent);
+  border-style: solid;
+  background: var(--ts-panel-2);
+}
+
+.ts-drop--off {
+  opacity: 0.55;
+}
+
+.ts-drop__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ts-drop__title {
+  font-size: 14.5px;
+  color: var(--ts-fg-2);
+}
+
+.ts-drop__hint {
+  max-width: 380px;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ─── 진행 중인 투입 */
+
+.ts-jobs {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-job {
+  padding: 12px 14px;
+  border: 1px solid var(--ts-line);
+  border-radius: var(--ts-radius);
+  background: var(--ts-panel);
+}
+
+.ts-job + .ts-job {
+  margin-top: 8px;
+}
+
+.ts-job__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ts-job__label {
+  overflow: hidden;
+  color: var(--ts-fg-2);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-job__elapsed {
+  flex: none;
+  color: var(--ts-dim);
+  font-family: var(--ts-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 단계 사슬 — 백엔드가 알려준 단계만 렌더한다. */
+.ts-stages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ts-stage {
+  color: var(--ts-dim);
+  font-size: 12px;
+}
+
+.ts-stage--done {
+  color: var(--ts-fg-2);
+}
+
+.ts-stage--active {
+  color: var(--ts-accent);
+}
+
+.ts-stage__sep {
+  color: var(--ts-line-2);
+  font-size: 11px;
+}
+
+.ts-dots::after {
+  content: "";
+  animation: ts-dots 1.4s steps(4, end) infinite;
+}
+
+@keyframes ts-dots {
+  0% { content: ""; }
+  25% { content: "·"; }
+  50% { content: "··"; }
+  75% { content: "···"; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-dots::after {
+    animation: none;
+    content: "···";
+  }
+}
+
+.ts-job__wait {
+  margin-top: 8px;
+  color: var(--ts-dim);
+  font-size: 12px;
+}
+
+/* ─── 대기 건수 (§9.10) — 조용히 */
+
+.ts-pending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ts-line);
+  color: var(--ts-dim);
+  font-size: 12.5px;
+}
+
+/* ─────────────────────────────────── 화면 2 · 2.1 — 카드 (§13-2 · 2.1) */
+
+.ts-card {
+  position: relative;
+  margin: 26px 0 0;
+  padding: 20px 22px 18px;
+  border: 1px solid var(--ts-line);
+  border-radius: var(--ts-radius);
+  background: var(--ts-panel);
+  box-shadow: var(--ts-shadow);
+}
+
+.ts-card__dismiss {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ts-dim);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ts-card__dismiss:hover {
+  background: var(--ts-panel-2);
+  color: var(--ts-fg-2);
+}
+
+.ts-card__banner {
+  margin: -4px 0 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--ts-line-2);
+  border-left: 2px solid var(--ts-warn);
+  border-radius: 6px;
+  background: var(--ts-panel-2);
+  color: var(--ts-warn);
+  font-size: 12.5px;
+}
+
+.ts-card__thumb {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  background: var(--ts-panel-2);
+  object-fit: cover;
+}
+
+.ts-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 999px;
+  background: var(--ts-panel-2);
+  color: var(--ts-dim);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.ts-card__kindrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ts-card__prose {
+  margin: 0;
+  color: var(--ts-fg);
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: -0.003em;
+  word-break: keep-all;
+}
+
+.ts-card__critique {
+  font-size: 15px;
+}
+
+.ts-card__lineage {
+  margin-top: 14px;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+}
+
+/* ─── ○/× 두 개. 정확히 두 개다 (§6.3 · T59). */
+
+.ts-verdicts {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.ts-verdict {
+  flex: 1 1 0;
+  padding: 11px 14px;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 8px;
+  background: var(--ts-panel-2);
+  color: var(--ts-fg-2);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+
+.ts-verdict:hover:not(:disabled) {
+  border-color: var(--ts-line-2);
+  background: var(--ts-panel);
+  color: var(--ts-fg);
+}
+
+.ts-verdict:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.ts-verdict[aria-pressed="true"] {
+  border-color: var(--ts-accent);
+  background: var(--ts-accent);
+  color: var(--ts-accent-fg);
+}
+
+/* ─── 정정문 한 줄 */
+
+.ts-correct {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ts-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 8px;
+  background: var(--ts-bg);
+  color: var(--ts-fg);
+  font-family: inherit;
+  font-size: 13.5px;
+}
+
+.ts-input:focus {
+  border-color: var(--ts-accent);
+  outline: none;
+}
+
+.ts-input::placeholder {
+  color: var(--ts-dim);
+}
+
+.ts-btn {
+  flex: none;
+  padding: 9px 14px;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 8px;
+  background: var(--ts-panel-2);
+  color: var(--ts-fg-2);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ts-btn:hover:not(:disabled) {
+  color: var(--ts-fg);
+}
+
+.ts-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.ts-btn--text {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ts-btn--text:hover:not(:disabled) {
+  color: var(--ts-fg-2);
+}
+
+.ts-hint {
+  margin-top: 8px;
+  color: var(--ts-dim);
+  font-size: 12px;
+}
+
+/* ─── 카드 하단 — "문화 글귀 준비 중" */
+
+.ts-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px -22px -18px;
+  padding: 10px 22px;
+  border-top: 1px solid var(--ts-line);
+  color: var(--ts-dim);
+  font-size: 12px;
+}
+
+.ts-card__done {
+  margin-top: 16px;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+}
+
+/* ─── kind 뒤집기 확인 (§9.3) */
+
+.ts-confirm {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ts-line-2);
+  border-left: 2px solid var(--ts-warn);
+  border-radius: 8px;
+  background: var(--ts-panel-2);
+}
+
+.ts-confirm__text {
+  margin: 0 0 10px;
+  color: var(--ts-fg-2);
+  font-size: 13px;
+}
+
+.ts-confirm__row {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── 근거 펼치기 (§13-2.1) */
+
+.ts-sources {
+  margin-top: 14px;
+}
+
+.ts-sources__toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ts-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ts-sources__toggle:hover {
+  color: var(--ts-fg-2);
+}
+
+.ts-sources__list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-sources__item {
+  padding: 7px 0;
+  border-top: 1px solid var(--ts-line);
+}
+
+.ts-sources__title {
+  display: block;
+  color: var(--ts-fg-2);
+  font-size: 13px;
+}
+
+.ts-sources__url {
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ts-dim);
+  font-family: var(--ts-mono);
+  font-size: 11.5px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.ts-sources__url:hover {
+  color: var(--ts-accent);
+  text-decoration: underline;
+}
+
+/* ─── 대기 목록 (§13-2.1) */
+
+.ts-deck__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ts-line);
+}
+
+.ts-deck__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ts-dim);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-deck__arrow {
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--ts-line-2);
+  border-radius: 6px;
+  background: var(--ts-panel);
+  color: var(--ts-fg-2);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ts-deck__arrow:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.ts-empty {
+  margin: 40px 0;
+  color: var(--ts-dim);
+  font-size: 13px;
+  text-align: center;
+}

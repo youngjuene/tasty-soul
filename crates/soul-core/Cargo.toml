@@ -1,0 +1,24 @@
+[package]
+name = "soul-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+base64 = "0.23.1"
+chrono = { version = "0.4.45", default-features = false, features = ["serde", "clock", "std"] }
+dirs = "6.0.0"
+fs4 = { version = "1.1.0", features = ["sync"] }
+git2 = "0.21.0"
+half = { version = "2.7.1", features = ["serde"] }
+hex = "0.4.3"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sha2 = "0.11.0"
+thiserror = "2.0.20"
+toml = "1.1.4"
+ulid = { version = "3.0.0", features = ["serde"] }
+
+[dev-dependencies]
+tempfile = "3"

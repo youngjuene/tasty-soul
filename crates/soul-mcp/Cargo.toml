@@ -1,0 +1,23 @@
+[package]
+name = "soul-mcp"
+version.workspace = true
+edition.workspace = true
+
+# 통합 테스트(`tests/`)는 바이너리 크레이트의 모듈을 볼 수 없다.
+# T30–T38 이 `crates/soul-mcp/tests/` 에 놓이려면 lib 타깃이 있어야 한다.
+[lib]
+name = "soul_mcp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "soul-mcp"
+path = "src/main.rs"
+
+# **여기에 의존성을 추가하지 않는다** (§19.4, T32).
+# MCP SDK 하나가 전이 의존으로 HTTP 클라이언트를 끌고 들어온다.
+[dependencies]
+anyhow = "1.0.104"
+serde = "1.0.229"
+serde_json = "1.0.151"
+soul-core = { version = "0.1.0", path = "../soul-core" }
+thiserror = "2.0.20"

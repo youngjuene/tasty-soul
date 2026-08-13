@@ -1,0 +1,911 @@
+/* ==========================================================================
+   base.css — 변수 · 리셋 · 타이포 · 공통 컴포넌트 클래스
+
+   어둡고 조용한 도구다. 취향 기록을 다루므로 화려하지 않게.
+   시스템 폰트, 절제된 색, 넉넉한 여백. 라이트/다크 모두 대응한다.
+
+   차트는 전부 손으로 쓴 인라인 SVG다 (§2 · §20.8). 라이브러리를 추가하지 않는다.
+   SVG 는 `--chart-*` 변수를 `stroke`/`fill` 에 그대로 쓴다.
+   ========================================================================== */
+
+/* ─────────────────────────────────────────────────────────── 변수 (라이트) */
+
+:root {
+  color-scheme: light dark;
+
+  /* 면 */
+  --bg: #faf9f7;
+  --bg-elev: #ffffff;
+  --bg-sunk: #f1efeb;
+  --hover: rgba(28, 27, 25, 0.045);
+  --overlay: rgba(28, 27, 25, 0.32);
+
+  /* 글자 */
+  --fg: #1c1b19;
+  --fg-dim: #5c5852;
+  --fg-mute: #918b82;
+
+  /* 선 */
+  --line: #e3dfd8;
+  --line-strong: #c8c2b8;
+
+  /* 강조 — 하나만 쓴다 */
+  --accent: #47687f;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(71, 104, 127, 0.12);
+
+  --warn: #96592a;
+  --warn-soft: rgba(150, 89, 42, 0.12);
+  --ok: #4a7550;
+
+  /* 2×2 셀 (§12.6) — other_reason 이 이 시스템이 찾으려는 것이다 */
+  --cell-read: #6f8f77;
+  --cell-other: #47687f;
+  --cell-wrong: #8a8478;
+  --cell-unread: #a9a297;
+
+  /* 손으로 쓴 SVG 차트 (§20.8) */
+  --chart-grid: #e9e5de;
+  --chart-axis: #918b82;
+  --chart-line: #47687f;
+  --chart-dot: #6a89a2;
+  --chart-dot-dim: #bcc7cf;
+  --chart-hi: #96592a;
+
+  /* 형태 */
+  --radius: 6px;
+  --radius-sm: 3px;
+  --shadow: 0 1px 2px rgba(28, 27, 25, 0.06), 0 6px 16px rgba(28, 27, 25, 0.05);
+
+  /* 간격 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 20px;
+  --space-5: 32px;
+  --space-6: 48px;
+
+  /* 타이포 */
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+    "Noto Sans KR", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text: 14px;
+  --text-lg: 17px;
+  --text-xl: 22px;
+  --leading: 1.65;
+
+  --dur: 120ms;
+}
+
+/* ───────────────────────────────────────────────────────────── 변수 (다크) */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141312;
+    --bg-elev: #1c1b19;
+    --bg-sunk: #0e0e0d;
+    --hover: rgba(232, 229, 224, 0.055);
+    --overlay: rgba(8, 8, 7, 0.55);
+
+    --fg: #e8e5e0;
+    --fg-dim: #a29c93;
+    --fg-mute: #6f6a63;
+
+    --line: #2b2926;
+    --line-strong: #423f3a;
+
+    --accent: #82a8c4;
+    --accent-fg: #10100f;
+    --accent-soft: rgba(130, 168, 196, 0.16);
+
+    --warn: #cf9a63;
+    --warn-soft: rgba(207, 154, 99, 0.16);
+    --ok: #82b08c;
+
+    --cell-read: #7fae8a;
+    --cell-other: #82a8c4;
+    --cell-wrong: #96907f;
+    --cell-unread: #605c55;
+
+    --chart-grid: #262421;
+    --chart-axis: #6f6a63;
+    --chart-line: #82a8c4;
+    --chart-dot: #92b5cd;
+    --chart-dot-dim: #3b464f;
+    --chart-hi: #cf9a63;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────── 리셋 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: var(--text);
+  line-height: var(--leading);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+}
+
+/* 데스크톱 앱이다. 텍스트가 아닌 곳의 선택과 드래그 기본값을 끈다. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+p,
+li,
+pre,
+code,
+input,
+textarea,
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+/* ───────────────────────────────────────────────────────────────── 타이포 */
+
+h1 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: var(--text);
+  font-weight: 600;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.dim {
+  color: var(--fg-dim);
+}
+
+.mute {
+  color: var(--fg-mute);
+}
+
+.small {
+  font-size: var(--text-sm);
+}
+
+.xsmall {
+  font-size: var(--text-xs);
+}
+
+/* §R10 — null 파생값은 `—` 로 렌더한다. 0으로 대체하지 않는다. */
+.nil {
+  color: var(--fg-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.warn-text {
+  color: var(--warn);
+}
+
+.ok-text {
+  color: var(--ok);
+}
+
+.prose {
+  max-width: 62ch;
+  color: var(--fg);
+}
+
+.prose + .prose {
+  margin-top: var(--space-3);
+}
+
+/* ─────────────────────────────────────────────────────────────── 레이아웃 */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stack-lg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.row-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.divider {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+  margin: var(--space-4) 0;
+}
+
+/* 넓은 표·차트·코드는 자기 안에서만 가로로 스크롤한다. */
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ───────────────────────────────────────────────────────────────── 셸 (App) */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.app__tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-elev);
+  flex: 0 0 auto;
+}
+
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-dim);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius);
+  cursor: default;
+  font-size: var(--text);
+  transition: background var(--dur) ease, color var(--dur) ease;
+}
+
+.tab:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.tab--on {
+  background: var(--accent-soft);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.app__banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.app__main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-5) var(--space-4);
+}
+
+.app__main > * {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* §9.10 · T51e — 대기 건수는 여기서 **조용히**만 알린다. 건별 알림을 띄우지 않는다. */
+.app__footer {
+  flex: 0 0 auto;
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--line);
+  background: var(--bg-elev);
+  color: var(--fg-mute);
+  font-size: var(--text-sm);
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app__boot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fg-mute);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+/* ───────────────────────────────────────────────────────────── 면 컴포넌트 */
+
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.panel__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg-dim);
+  letter-spacing: 0.02em;
+}
+
+.panel__note {
+  font-size: var(--text-sm);
+  color: var(--fg-mute);
+}
+
+.sunk {
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+
+/* 관측이 부족해 그릴 수 없으면 빈 상태를 표시한다. 축을 0으로 채우지 않는다 (§13 화면 5). */
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: var(--space-4);
+  color: var(--fg-mute);
+  font-size: var(--text-sm);
+  text-align: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.notice {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--bg-sunk);
+  border-left: 2px solid var(--line-strong);
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.notice--warn {
+  background: var(--warn-soft);
+  border-left-color: var(--warn);
+  color: var(--warn);
+}
+
+/* ───────────────────────────────────────────────────────────────── 버튼 */
+
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  color: var(--fg);
+  font-size: var(--text);
+  cursor: default;
+  white-space: nowrap;
+  transition: background var(--dur) ease, border-color var(--dur) ease,
+    opacity var(--dur) ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--fg-mute);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0.5px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--fg-dim);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: transparent;
+  color: var(--fg);
+}
+
+.btn--warn {
+  border-color: var(--warn);
+  color: var(--warn);
+  background: transparent;
+}
+
+.btn--warn:hover:not(:disabled) {
+  background: var(--warn-soft);
+}
+
+.btn--sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/*
+  §6.3 · §18-6 · T59 — ○/× 버튼은 **정확히 두 개**다.
+  중간 선택지를 넣지 않는다. 망설이는 항목은 카드를 넘긴다.
+*/
+.verdict-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.verdict-row > .btn {
+  padding: var(--space-3) var(--space-4);
+}
+
+/* ───────────────────────────────────────────────────────── 입력 · 필터 칩 */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field__label {
+  font-size: var(--text-sm);
+  color: var(--fg-dim);
+}
+
+.field__hint {
+  font-size: var(--text-sm);
+  color: var(--fg-mute);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: var(--text);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--fg-mute);
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: var(--leading);
+}
+
+.textarea--code {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  min-height: 320px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: default;
+}
+
+.checkbox-row input {
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+
+/* 패싯 필터 토글 (§13 화면 6) */
+.chip {
+  appearance: none;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-dim);
+  font-size: var(--text-sm);
+  cursor: default;
+  white-space: nowrap;
+  transition: background var(--dur) ease, color var(--dur) ease,
+    border-color var(--dur) ease;
+}
+
+.chip:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.chip--on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+/* machine.tags 등 읽기 전용 꼬리표 */
+.tag {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunk);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────── 표 */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--fg-dim);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td.num,
+.table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ───────────────────────────────────────────────────── 인라인 SVG 차트 */
+
+/*
+  §2 · §20.8 — 차트 라이브러리를 쓰지 않는다. 아래 클래스는 손으로 쓴 SVG 전용이다.
+  값은 전부 Rust 가 준 것이며 프런트에서 축을 계산하지 않는다.
+*/
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart__grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  fill: none;
+}
+
+.chart__axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+  fill: none;
+}
+
+.chart__label {
+  fill: var(--chart-axis);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.chart__line {
+  stroke: var(--chart-line);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart__dot {
+  fill: var(--chart-dot);
+}
+
+.chart__dot--dim {
+  fill: var(--chart-dot-dim);
+}
+
+.chart__dot--hi {
+  fill: var(--chart-hi);
+}
+
+.chart__bar {
+  fill: var(--chart-line);
+}
+
+/* §R11 — prompt_sha256 경계의 세로 구분선. */
+.chart__boundary {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* 2×2 셀 격자 (§13 화면 5 패널 2) */
+.cells {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.cells__box {
+  background: var(--bg-elev);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 88px;
+}
+
+/* other_reason 이 이 시스템이 찾으려는 것이다 (§12.6). 그 칸만 강조한다. */
+.cells__box--hi {
+  background: var(--accent-soft);
+}
+
+.cells__count {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.cells__name {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--fg-dim);
+}
+
+.cells__trend {
+  font-size: var(--text-xs);
+  color: var(--fg-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────────────────────────────────────────────────────── 진행 · 상태 */
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--line-strong);
+  border-top-color: var(--fg-dim);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+  flex: 0 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────── 오버레이 */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  z-index: 40;
+}
+
+.overlay__panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-5);
+  max-width: 720px;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}

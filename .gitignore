@@ -1,0 +1,12 @@
+/target
+/dist
+/node_modules
+/src-tauri/gen
+*.log
+.DS_Store
+
+# 평문 API 키. 절대 커밋하지 않는다 (§2)
+.env
+
+# 설계 명세 — 공개하지 않는다. § 참조는 docs/SPEC-REFERENCE.md 로 대신한다
+tasty-soul-mvp-plan.md

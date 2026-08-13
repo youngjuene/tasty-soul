@@ -1,0 +1,705 @@
+/*
+ * 화면 3(SOUL.md) · 화면 4(승인 diff) · 설정 · 데이터 경계 고지의 스타일.
+ *
+ * 어둡고 조용한 도구다. 시스템 폰트, 절제된 색, 넉넉한 여백.
+ * 토큰은 `.doc` 안에만 둔다 — 전역 `:root`를 건드리지 않아야 다른 화면과 충돌하지 않는다.
+ * 라이트·다크 모두 대응한다.
+ */
+
+.doc {
+  --doc-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --doc-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
+  --doc-bg: #faf9f7;
+  --doc-panel: #ffffff;
+  --doc-fg: #1d1e21;
+  --doc-muted: #6c6f76;
+  --doc-line: #e2e0db;
+  --doc-line-soft: #eeece8;
+  --doc-accent: #3f6154;
+  --doc-accent-fg: #ffffff;
+  --doc-gen: #f1efeb;
+  --doc-code-bg: #f2f0ec;
+
+  --doc-ok: #35704b;
+  --doc-bad: #9a3b3b;
+  --doc-warn-bg: #fbf3e2;
+  --doc-warn-fg: #71551a;
+  --doc-err-bg: #f9ebeb;
+  --doc-err-fg: #8a3030;
+  --doc-note-bg: #f4f3f0;
+
+  --doc-add-bg: #e9f2ec;
+  --doc-add-fg: #2f6a45;
+  --doc-del-bg: #f8ebeb;
+  --doc-del-fg: #8f3838;
+  --doc-blank-bg: #f6f5f2;
+
+  color-scheme: light dark;
+  box-sizing: border-box;
+  max-width: 64rem;
+  margin: 0 auto;
+  /* 바깥 여백은 셸(`.app__main`)이 준다. 여기서는 아래쪽 숨통만 틔운다 */
+  padding: 0 0 4rem;
+  color: var(--doc-fg);
+  background: transparent;
+  font-family: var(--doc-sans);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  .doc {
+    --doc-bg: #15171a;
+    --doc-panel: #1b1e22;
+    --doc-fg: #dcdad6;
+    --doc-muted: #8b9098;
+    --doc-line: #2b2f35;
+    --doc-line-soft: #23272c;
+    --doc-accent: #6f9482;
+    --doc-accent-fg: #10130f;
+    --doc-gen: #22262b;
+    --doc-code-bg: #23272c;
+
+    --doc-ok: #7fb392;
+    --doc-bad: #d08a8a;
+    --doc-warn-bg: #2b2718;
+    --doc-warn-fg: #d9c48a;
+    --doc-err-bg: #2c1e1e;
+    --doc-err-fg: #e0a0a0;
+    --doc-note-bg: #1e2126;
+
+    --doc-add-bg: #1c2a22;
+    --doc-add-fg: #8fc4a3;
+    --doc-del-bg: #2c1f1f;
+    --doc-del-fg: #d69a9a;
+    --doc-blank-bg: #191c20;
+  }
+}
+
+.doc *,
+.doc *::before,
+.doc *::after {
+  box-sizing: inherit;
+}
+
+/* ── 문서 뼈대 ─────────────────────────────────────────────── */
+
+.doc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.doc-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.doc-h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--doc-fg);
+}
+
+.doc-lead {
+  margin: 0 0 2rem;
+  max-width: 46rem;
+  color: var(--doc-fg);
+}
+
+.doc-muted {
+  color: var(--doc-muted);
+}
+
+.doc-legend {
+  font-size: 0.86rem;
+  margin: 0 0 1rem;
+  max-width: 46rem;
+}
+
+.doc-empty {
+  color: var(--doc-muted);
+  padding: 1.5rem 0;
+  margin: 0;
+}
+
+.doc-ok {
+  color: var(--doc-ok);
+}
+
+.doc-bad {
+  color: var(--doc-bad);
+}
+
+.doc-num {
+  font-family: var(--doc-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.doc-code {
+  font-family: var(--doc-mono);
+  font-size: 0.86em;
+  background: var(--doc-code-bg);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+
+.doc-panel {
+  background: var(--doc-panel);
+  border: 1px solid var(--doc-line);
+  border-radius: 6px;
+  padding: 1.25rem 1.35rem;
+  margin: 0 0 1.25rem;
+}
+
+.doc-panel-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.doc-panel-row > .doc-panel {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .doc-panel-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.doc-note {
+  background: var(--doc-note-bg);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.doc-note p {
+  margin: 0 0 0.75rem;
+  max-width: 46rem;
+}
+
+.doc-note p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── 알림 ──────────────────────────────────────────────────── */
+
+.doc-error {
+  background: var(--doc-err-bg);
+  color: var(--doc-err-fg);
+  border-radius: 5px;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  white-space: pre-wrap;
+}
+
+.doc-warn {
+  background: var(--doc-warn-bg);
+  color: var(--doc-warn-fg);
+  border-radius: 5px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0 0;
+}
+
+.doc-result {
+  background: var(--doc-note-bg);
+  border-left: 2px solid var(--doc-accent);
+  border-radius: 0 5px 5px 0;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.doc-result p {
+  margin: 0 0 0.5rem;
+}
+
+.doc-result p:last-child {
+  margin-bottom: 0;
+}
+
+.doc-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: var(--doc-warn-bg);
+  color: var(--doc-warn-fg);
+  border-radius: 5px;
+  padding: 0.6rem 1rem;
+  margin: 0 0 1rem;
+}
+
+/* ── 버튼 · 입력 ───────────────────────────────────────────── */
+
+.doc-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.doc-actions-main {
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.doc-panel > .doc-actions {
+  margin-top: 1rem;
+}
+
+.doc-btn {
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--doc-fg);
+  background: var(--doc-panel);
+  border: 1px solid var(--doc-line);
+  border-radius: 5px;
+  padding: 0.45rem 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.doc-btn:hover:not(:disabled) {
+  border-color: var(--doc-muted);
+}
+
+.doc-btn:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 2px;
+}
+
+.doc-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.doc-btn-primary {
+  background: var(--doc-accent);
+  color: var(--doc-accent-fg);
+  border-color: var(--doc-accent);
+}
+
+.doc-btn-danger {
+  color: var(--doc-bad);
+}
+
+.doc-btn-quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--doc-muted);
+  padding-inline: 0.5rem;
+}
+
+.doc-input {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--doc-fg);
+  background: var(--doc-bg);
+  border: 1px solid var(--doc-line);
+  border-radius: 5px;
+  padding: 0.45rem 0.6rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.doc-input:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 1px;
+}
+
+.doc-textarea {
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  width: 100%;
+  min-height: 12rem;
+  color: var(--doc-fg);
+  background: var(--doc-bg);
+  border: 1px solid var(--doc-line);
+  border-radius: 5px;
+  padding: 0.85rem 1rem;
+  resize: vertical;
+}
+
+.doc-mono {
+  font-family: var(--doc-mono);
+  font-size: 0.82rem;
+  min-height: 0;
+}
+
+.doc-radio,
+.doc-check {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.6rem 0;
+  cursor: pointer;
+}
+
+.doc-radio > span,
+.doc-check > span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.doc-radio-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.doc-radio .doc-muted,
+.doc-check .doc-muted {
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.doc-radio input,
+.doc-check input {
+  margin-top: 0.45rem;
+  accent-color: var(--doc-accent);
+}
+
+.doc-choice {
+  border: 1px solid var(--doc-line);
+  border-radius: 6px;
+  padding: 1rem 1.25rem 1.1rem;
+  margin: 1.5rem 0;
+  background: var(--doc-panel);
+}
+
+.doc-choice > legend {
+  padding: 0 0.4rem;
+}
+
+.doc-choice > p {
+  margin: 0 0 0.5rem;
+}
+
+/* ── 표 ────────────────────────────────────────────────────── */
+
+.doc-tablewrap {
+  overflow-x: auto;
+  margin: 0 0 1.25rem;
+}
+
+.doc-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.doc-caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--doc-muted);
+  font-size: 0.85rem;
+  padding-bottom: 0.5rem;
+}
+
+.doc-table th,
+.doc-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--doc-line-soft);
+}
+
+.doc-table thead th {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--doc-muted);
+  border-bottom: 1px solid var(--doc-line);
+}
+
+.doc-table-kv th[scope="row"] {
+  font-weight: 500;
+  color: var(--doc-muted);
+  width: 12rem;
+}
+
+.doc-table-axis {
+  max-width: 22rem;
+}
+
+/* §D2 표 — 문구는 그대로 두고 색으로만 갈래를 구분한다 */
+.doc-table-boundary td:first-child {
+  width: 55%;
+}
+
+.doc-table-boundary .is-strong {
+  font-weight: 700;
+}
+
+.doc-table-boundary tr.is-sent td:last-child {
+  color: var(--doc-bad);
+}
+
+.doc-table-boundary tr.is-expose td:last-child {
+  color: var(--doc-bad);
+}
+
+.doc-table-boundary tr.is-kept td:last-child {
+  color: var(--doc-ok);
+}
+
+/* ── 마크다운 렌더 (화면 3) ────────────────────────────────── */
+
+.doc-md {
+  max-width: 46rem;
+}
+
+.doc-md-h {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 2.2rem 0 0.9rem;
+}
+
+.doc-md-h:first-child {
+  margin-top: 0;
+}
+
+.doc-md-h1 {
+  font-size: 1.4rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--doc-line);
+}
+
+.doc-md-h2 {
+  font-size: 1.1rem;
+}
+
+.doc-md-h3 {
+  font-size: 1rem;
+}
+
+.doc-md-h4,
+.doc-md-h5,
+.doc-md-h6 {
+  font-size: 0.95rem;
+  color: var(--doc-muted);
+}
+
+.doc-md-p {
+  margin: 0 0 1.1rem;
+  /* 파일의 줄 나눔을 그대로 보여준다 (`lib/md.ts` 참고) */
+  white-space: pre-line;
+}
+
+.doc-md-list {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+}
+
+.doc-md-list li {
+  margin-bottom: 0.3rem;
+}
+
+/* ── 편집 모드 (화면 3) ────────────────────────────────────── */
+
+.doc-edit {
+  position: relative;
+  height: 62vh;
+  min-height: 24rem;
+}
+
+.doc-edit-backdrop,
+.doc-edit-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--doc-line);
+  border-radius: 5px;
+  padding: 0.9rem 1rem;
+  font-family: var(--doc-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  tab-size: 2;
+  scrollbar-gutter: stable;
+}
+
+.doc-edit-backdrop {
+  color: transparent;
+  background: var(--doc-panel);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.doc-edit-line {
+  min-height: 1px;
+}
+
+/* `soul:gen` 블록 — 재빌드 때 덮어써지는 구간 */
+.doc-edit-line.is-gen {
+  background: var(--doc-gen);
+  box-shadow: -0.6rem 0 0 var(--doc-gen), 0.6rem 0 0 var(--doc-gen);
+}
+
+.doc-edit-input {
+  color: var(--doc-fg);
+  background: transparent;
+  caret-color: var(--doc-accent);
+  overflow: auto;
+  resize: none;
+}
+
+.doc-edit-input:focus-visible {
+  outline: 2px solid var(--doc-accent);
+  outline-offset: 1px;
+}
+
+/* ── diff (화면 4) ─────────────────────────────────────────── */
+
+.doc-diffwrap {
+  border: 1px solid var(--doc-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.doc-diff-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  font-size: 0.8rem;
+  color: var(--doc-muted);
+  background: var(--doc-line-soft);
+}
+
+.doc-diff-head > div {
+  padding: 0.4rem 0.8rem;
+}
+
+.doc-diff-head > div + div {
+  border-left: 1px solid var(--doc-line);
+}
+
+.doc-diff-body {
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--doc-panel);
+}
+
+.doc-diff-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.doc-diff-cell {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.05rem 0.8rem;
+  font-family: var(--doc-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  min-width: 0;
+}
+
+.doc-diff-cell + .doc-diff-cell {
+  border-left: 1px solid var(--doc-line);
+}
+
+.doc-diff-n {
+  flex: 0 0 2.5rem;
+  text-align: right;
+  color: var(--doc-muted);
+  opacity: 0.7;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-diff-t {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.doc-diff-cell.is-del {
+  background: var(--doc-del-bg);
+  color: var(--doc-del-fg);
+}
+
+.doc-diff-cell.is-add {
+  background: var(--doc-add-bg);
+  color: var(--doc-add-fg);
+}
+
+.doc-diff-cell.is-blank {
+  background: var(--doc-blank-bg);
+}
+
+.doc-cites {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* ── 설정 ──────────────────────────────────────────────────── */
+
+.doc-keys,
+.doc-slots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doc-key,
+.doc-slot {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--doc-line-soft);
+}
+
+.doc-key:first-child,
+.doc-slot:first-child {
+  border-top: 0;
+  padding-top: 0.25rem;
+}
+
+.doc-key-head,
+.doc-slot-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.doc-key-label,
+.doc-slot-label {
+  font-weight: 500;
+}
+
+.doc-key-row,
+.doc-slot-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
