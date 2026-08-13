@@ -14,7 +14,10 @@ import {
   doctor,
   errorText,
   getConfig,
+  exportPrompt,
   mcpConfigJson,
+  rebuild,
+  tracePurge,
   secretsStatus,
   setConfig,
   setSecret,
@@ -95,6 +98,8 @@ export function Setup() {
 
   const [probing, setProbing] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** 유지보수 동작 중인 항목 id. 한 번에 하나만 돈다. */
+  const [maint, setMaint] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
@@ -130,6 +135,24 @@ export function Setup() {
   }, [refreshStatus, refreshSecrets]);
 
   const cfgDirty = cfg !== null && JSON.stringify(cfg) !== savedCfg;
+
+  /**
+   * 유지보수 동작 하나를 돌린다. 한 번에 하나만 — 재빌드 중에 트레이스를 지우는 것 같은
+   * 겹침을 막는다 (쓰기 락은 Rust 가 잡지만, 그 실패를 사용자에게 보이느니 애초에 막는다).
+   */
+  async function runMaintenance(id: string, run: () => Promise<string | void>) {
+    setMaint(id);
+    setError(null);
+    setNote(null);
+    try {
+      const msg = await run();
+      setNote(typeof msg === "string" ? msg : "완료했습니다.");
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setMaint(null);
+    }
+  }
 
   async function runDoctor(probeModels: boolean) {
     setProbing(true);
@@ -523,6 +546,80 @@ export function Setup() {
             </div>
           </>
         )}
+      </div>
+
+      {/*
+        §11.3 · §14 — 명세는 이 셋을 CLI 명령으로 정의하지만, GUI 만 쓰는 사람에게는
+        **트레이스를 지울 수단이 아예 없어진다.** §11.3 은 "사용자가 지울 수단을 반드시
+        제공한다"고 못박으므로, 최소한 그 하나는 앱에도 있어야 한다.
+        나머지 둘은 같은 성격(로컬 유지보수)이라 같은 자리에 둔다.
+      */}
+      <div className="doc-card">
+        <h2 className="doc-h2">유지보수</h2>
+
+        <div className="doc-maint">
+          <div className="doc-maint-row">
+            <div>
+              <strong>에이전트 트레이스 삭제</strong>
+              <p className="doc-muted doc-legend">
+                <code>runs/</code> 에는 프롬프트와 서술문이 <strong>평문으로</strong> 남습니다.
+                로컬 파일이지만 지울 수단을 반드시 제공합니다 (§11.3). 관측과 SOUL.md 는
+                건드리지 않습니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="doc-btn"
+              disabled={maint !== null}
+              onClick={() => void runMaintenance("trace", async () => {
+                const n = await tracePurge();
+                return `트레이스 ${n}건을 지웠습니다.`;
+              })}
+            >
+              {maint === "trace" ? "지우는 중…" : "지우기"}
+            </button>
+          </div>
+
+          <div className="doc-maint-row">
+            <div>
+              <strong>재빌드</strong>
+              <p className="doc-muted doc-legend">
+                관측을 ULID 순으로 재생해 파생값과 SOUL.md 를 다시 만듭니다 (§R2).
+                <code>soul:human</code> 블록은 기존 파일에서 이월됩니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="doc-btn"
+              disabled={maint !== null}
+              onClick={() => void runMaintenance("rebuild", () => rebuild(false, false))}
+            >
+              {maint === "rebuild" ? "재빌드 중…" : "실행"}
+            </button>
+          </div>
+
+          <div className="doc-maint-row">
+            <div>
+              <strong>프롬프트로 내보내기</strong>
+              <p className="doc-muted doc-legend">
+                마커 주석만 제거한 <code>SOUL.md</code> 를 <code>exports/</code> 에 씁니다.
+                <strong>축소된 경로</strong>이며 §19.1 의 한계를 그대로 갖습니다 — 에이전트에
+                붙이는 편이 낫습니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="doc-btn"
+              disabled={maint !== null}
+              onClick={() => void runMaintenance("export", async () => {
+                const t = await exportPrompt();
+                return `내보냈습니다 (${t.length}자). exports/SOUL.prompt.md`;
+              })}
+            >
+              {maint === "export" ? "내보내는 중…" : "내보내기"}
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );

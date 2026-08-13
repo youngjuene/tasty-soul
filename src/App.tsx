@@ -13,6 +13,7 @@ import { errorText, setupStatus } from "./lib/api";
 import type { SetupStatus } from "./lib/types";
 
 import BoundaryNotice from "./components/BoundaryNotice";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Archive from "./screens/Archive";
 import ApproveDiff from "./screens/ApproveDiff";
 import CulturalCardList from "./screens/CulturalCard";
@@ -168,37 +169,53 @@ export default function App() {
           셸은 같은 수를 두 번 그리지 않고, 목록을 여는 경로만 넘긴다 (T51e).
         */}
         {tab === "ingest" && (
-          <Ingest
-            onOpenCulturalCards={() => setCulturalOpen(true)}
-            disabled={blocked}
-            disabledReason={blocked ? blockedReason : undefined}
-          />
+          <ErrorBoundary screen="투입">
+            <Ingest
+              onOpenCulturalCards={() => setCulturalOpen(true)}
+              disabled={blocked}
+              disabledReason={blocked ? blockedReason : undefined}
+            />
+          </ErrorBoundary>
         )}
 
         {/* 화면 3 + 화면 4 — 성찰 제안은 SOUL.md 편집과 같은 자리에서 승인한다. */}
         {tab === "soul" && (
-          <div className="stack-lg">
-            <SoulDoc />
-            <ApproveDiff />
-          </div>
+          <ErrorBoundary screen="SOUL">
+            <div className="stack-lg">
+              <SoulDoc />
+              <ApproveDiff />
+            </div>
+          </ErrorBoundary>
         )}
 
         {/* 화면 5 → 6 — "대시보드에서 넘어가는 공간"이다. 누른 셀을 초기 패싯으로 넘긴다. */}
         {tab === "dashboard" && (
-          <Dashboard
-            onOpenArchive={(cell) => {
-              setArchiveCell(cell ?? null);
-              setTab("archive");
-            }}
-          />
+          <ErrorBoundary screen="대시보드">
+            <Dashboard
+              onOpenArchive={(cell) => {
+                setArchiveCell(cell ?? null);
+                setTab("archive");
+              }}
+            />
+          </ErrorBoundary>
         )}
         {tab === "archive" && (
-          <Archive
-            key={archiveCell ?? "all"}
-            initialCell={archiveCell ?? undefined}
-          />
+          <ErrorBoundary screen="아카이브">
+            <Archive
+              key={archiveCell ?? "all"}
+              initialCell={archiveCell ?? undefined}
+            />
+          </ErrorBoundary>
         )}
-        {tab === "settings" && <Setup />}
+        {/*
+          설정은 특히 감싼다. 여기가 터지면 키·모델을 고칠 길이 사라지고,
+          그것은 다른 모든 화면이 막힌 상태의 **유일한 탈출구**다 (§15).
+        */}
+        {tab === "settings" && (
+          <ErrorBoundary screen="설정">
+            <Setup />
+          </ErrorBoundary>
+        )}
       </main>
 
       {/* 화면 2.1 — 대기 목록은 한 번에 넘겨본다. 건별 알림을 띄우지 않는다 (T51e). */}

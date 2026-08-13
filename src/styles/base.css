@@ -909,3 +909,38 @@ h3 {
   max-height: 100%;
   overflow-y: auto;
 }
+
+/* ── 화면 단위 오류 경계 (components/ErrorBoundary.tsx) ─────────────────────
+   화면 하나가 던져도 탭 바는 살아 있어야 다른 곳으로 빠져나갈 수 있다.
+   그래서 이 상자는 화면 영역만 차지한다. */
+.err-boundary {
+  border: 1px solid var(--warn, #a4703c);
+  border-radius: var(--radius, 8px);
+  background: var(--bg-elev, #17171a);
+  padding: 1.5rem;
+  max-width: 42rem;
+  margin: 2rem auto;
+}
+.err-boundary__title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--warn, #a4703c);
+}
+.err-boundary__body {
+  margin: 0 0 1rem;
+  color: var(--fg-dim, #8a8a90);
+  font-size: 0.875rem;
+}
+.err-boundary__detail {
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--bg, #0f0f11);
+  color: var(--fg-dim, #8a8a90);
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}

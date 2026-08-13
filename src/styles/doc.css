@@ -703,3 +703,15 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* ── 유지보수 (§11.3 · §14) ─────────────────────────────────────────────── */
+.doc-maint { display: flex; flex-direction: column; gap: 1.25rem; }
+.doc-maint-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.doc-maint-row > div { flex: 1; min-width: 0; }
+.doc-maint-row .doc-legend { margin-top: 0.25rem; }
+.doc-maint-row .doc-btn { flex: none; }
