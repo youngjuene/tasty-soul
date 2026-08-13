@@ -13,10 +13,13 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
-      - name: 시스템 의존성 (Tauri)
+      - name: 시스템 의존성 (Tauri · 미디어)
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          # ffmpeg 이 없으면 soul-media 테스트가 조용히 건너뛰어진다
+          # (`ffmpeg::locate()` 가 None 이면 early return). 실제로 돌려야 의미가 있다.
+          sudo apt-get install -y ffmpeg
       # §19.4 · T32 · T34 — 크레이트 경계가 먼저다. 이게 깨지면 나머지는 의미가 없다.
       - name: 의존 경계 검사
         run: ./ci/check-deps.sh
