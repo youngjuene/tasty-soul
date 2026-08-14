@@ -9,7 +9,11 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit",
-    "design": "vite --config ui/preview/vite.config.ts"
+    "design": "vite --config ui/preview/vite.config.ts",
+    "app:dev": "tauri dev",
+    "app:debug": "tauri build --debug --no-bundle",
+    "app:release": "tauri build",
+    "icon": "tauri icon ui/icon.svg"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

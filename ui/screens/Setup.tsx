@@ -85,6 +85,71 @@ function Text({ v }: { v: string | null }) {
   return <span className={s === EM_DASH ? "doc-muted" : undefined}>{s}</span>;
 }
 
+/** 설치 안내를 띄울 플랫폼. 표시용이므로 userAgent 로 충분하다. */
+function guessPlatform(): "macos" | "windows" | "linux" {
+  const ua = navigator.userAgent;
+  if (ua.includes("Mac")) return "macos";
+  if (ua.includes("Win")) return "windows";
+  return "linux";
+}
+
+const INSTALL: Record<string, Record<"macos" | "windows" | "linux", string>> = {
+  ffmpeg: {
+    macos: "brew install ffmpeg",
+    windows: "winget install Gyan.FFmpeg",
+    linux: "sudo apt-get install ffmpeg",
+  },
+  "yt-dlp": {
+    macos: "brew install yt-dlp",
+    windows: "winget install yt-dlp.yt-dlp",
+    linux: "sudo apt-get install yt-dlp",
+  },
+};
+
+/**
+ * 외부 도구 한 줄. **없을 때 무엇이 멈추는지와 어떻게 고치는지를 함께 적는다.**
+ *
+ * §9.7·§20.8 — 앱은 ffmpeg 과 yt-dlp 를 번들하지 않는다. 즉 이 앱을 다른 기계로
+ * 옮기면 거기에는 없을 수 있다. 그때 표에 `—` 만 뜨면 사용자는 무엇이 왜 안 되는지
+ * 알 수 없다. 진단 화면은 그것을 말해 주는 자리다.
+ *
+ * `missing` 은 **없어도 정상인가**를 뜻한다. yt-dlp 는 없어도 §9.3 단계 6 으로
+ * 내려가 `quality: minimal` 로 기록될 뿐이라 오류가 아니다 (T11).
+ */
+function ToolRow({
+  name,
+  version,
+  consequence,
+  fatal,
+}: {
+  name: string;
+  version: string | null;
+  consequence: string;
+  fatal: boolean;
+}) {
+  const missing = version === null || version === "";
+  const cmd = INSTALL[name]?.[guessPlatform()];
+  return (
+    <tr>
+      <th scope="row">{name}</th>
+      <td>
+        <Text v={version} />
+        {missing && (
+          <div className={fatal ? "doc-tool-warn" : "doc-muted doc-legend"}>
+            {consequence}
+            {cmd && (
+              <>
+                {" "}
+                설치: <code>{cmd}</code>
+              </>
+            )}
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 export function Setup() {
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [cfg, setCfg] = useState<Config | null>(null);
@@ -450,24 +515,24 @@ export function Setup() {
                     <Flag ok={report.soul_md_ok} />
                   </td>
                 </tr>
-                <tr>
-                  <th scope="row">ffmpeg</th>
-                  <td>
-                    <Text v={report.ffmpeg} />
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">ffprobe</th>
-                  <td>
-                    <Text v={report.ffprobe} />
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">yt-dlp</th>
-                  <td>
-                    <Text v={report.ytdlp} />
-                  </td>
-                </tr>
+                <ToolRow
+                  name="ffmpeg"
+                  version={report.ffmpeg}
+                  fatal
+                  consequence="영상·오디오 투입 경로가 비활성화됩니다 (§15). 이미지·텍스트는 그대로 동작합니다."
+                />
+                <ToolRow
+                  name="ffprobe"
+                  version={report.ffprobe}
+                  fatal
+                  consequence="ffmpeg 과 함께 설치됩니다. 없으면 kind 판별이 확장자에 의존하게 됩니다 (§9.1)."
+                />
+                <ToolRow
+                  name="yt-dlp"
+                  version={report.ytdlp}
+                  fatal={false}
+                  consequence="없어도 정상입니다 — YouTube 는 썸네일+메타데이터 경로로 처리되어 quality: minimal 로 기록됩니다 (§9.3 단계 6)."
+                />
                 <tr>
                   <th scope="row">임베딩</th>
                   <td>

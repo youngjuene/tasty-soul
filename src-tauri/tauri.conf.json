@@ -27,9 +27,24 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "app",
+      "dmg",
+      "nsis"
+    ],
     "icon": [
-      "icons/icon.png"
-    ]
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "copyright": "Copyright (c) 2026 youngjuene",
+    "category": "Productivity",
+    "shortDescription": "취향 관측 로그",
+    "longDescription": "미디어를 투입하면 감각 글귀와 문화 글귀 두 개가 생기고, 각각에 대한 ○/× 가 2×2 셀을 이룬다. 모든 사건이 추가 전용 관측 로그에 쌓이고, 그 로그만으로 SOUL.md 와 대시보드가 결정론적으로 재생성된다.",
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    }
   }
 }

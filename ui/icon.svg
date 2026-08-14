@@ -1,0 +1,35 @@
+<!--
+  앱 아이콘 원본. `npm run tauri icon ui/icon.svg` 가 여기서 전 플랫폼 아이콘을 만든다.
+
+  그린 것은 §12.6 의 2×2 셀이다 — 이 앱이 하는 일 자체다.
+  가로는 문화 글귀(그래서 좋다 / 그것 때문은 아니다),
+  세로는 감각 글귀(그렇다 / 아니다).
+
+  오른쪽 위 칸만 채워져 있다. 그 칸이 `other_reason` —
+  "보는 것은 같으나 끌리는 이유가 다르다" 이고, 명세가 "이 시스템이 찾으려는 것"
+  이라고 못박은 칸이다 (§12.6). 네 칸을 균등하게 그리면 아이콘이 아무 말도 하지 않는다.
+
+  색은 `ui/styles/base.css` 의 다크 팔레트에서 가져왔다:
+  바탕은 bg-elev 계열, 채운 칸은 accent, 나머지 윤곽은 line-strong.
+
+  주의: XML 주석 안에는 하이픈 두 개를 연달아 쓸 수 없다. CSS 변수 이름을
+  그대로 적으면 usvg 가 파싱에 실패한다.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232120"/>
+      <stop offset="1" stop-color="#131211"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#bg)"/>
+
+  <g fill="none" stroke="#4c4841" stroke-width="26">
+    <rect x="240" y="240" width="256" height="256" rx="56"/>
+    <rect x="240" y="528" width="256" height="256" rx="56"/>
+    <rect x="528" y="528" width="256" height="256" rx="56"/>
+  </g>
+
+  <rect x="528" y="240" width="256" height="256" rx="56" fill="#82a8c4"/>
+</svg>

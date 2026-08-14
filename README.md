@@ -135,8 +135,10 @@ cargo test --workspace          # 인수 테스트는 완전 오프라인이다 
 ./ci/check-deps.sh              # 크레이트 경계 (§19.4)
 cargo clippy --workspace --all-targets -- -D warnings
 
-npm run tauri dev               # 앱 (개발 서버 사용)
-npm run tauri build -- --no-bundle   # 릴리즈 바이너리 → target/release/tasty-soul
+npm run app:dev                 # 앱 (개발 서버 사용 · 핫 리로드)
+npm run app:debug               # 자산이 박힌 디버그 바이너리 → target/debug/tasty-soul
+npm run app:release             # .app + .dmg → target/release/bundle/
+npm run icon                    # ui/icon.svg → 전 플랫폼 아이콘 재생성
 cargo run -p soul-cli -- doctor # CLI 진단
 cargo run -p soul-cli -- doctor --probe   # 모델 슬롯까지 (네트워크 사용, §9.9)
 
@@ -147,14 +149,31 @@ cargo run -p soul-core --example seed -- /tmp/soul-demo 120
 SOUL_ROOT=/tmp/soul-demo cargo run -p soul-cli -- render
 ```
 
-> **`./target/debug/tasty-soul` 을 직접 실행하면 창이 빈 채로 뜬다.** 버그가 아니다 —
-> 디버그 빌드는 `tauri.conf.json` 의 `devUrl`(`localhost:1420`)을 가리키므로 개발 서버가
-> 없으면 아무것도 못 불러온다. 디버그로 볼 때는 `npm run tauri dev`, 배포본을 볼 때는
-> `npm run tauri build` 로 만든 `target/release/tasty-soul` 을 쓴다 (자산이 바이너리에 박힌다).
+> **`cargo build` 가 만든 `target/debug/tasty-soul` 을 직접 실행하면 창이 빈 채로 뜬다.**
+> 버그가 아니다 — `cargo` 만 돌리면 프런트엔드가 빌드되지 않으므로 Tauri 는
+> `tauri.conf.json` 의 `devUrl`(`localhost:1420`)로 떨어지고, 개발 서버가 없으면
+> 아무것도 못 불러온다.
+>
+> `npm run app:debug` 는 프런트엔드를 먼저 빌드해 **같은 경로의 바이너리를 자립형으로
+> 바꾼다.** 1420 포트가 닫혀 있어도 정상적으로 뜨므로, 디버그 심볼을 유지한 채
+> 배포본과 같은 자산 해석 경로를 시험할 수 있다. 핫 리로드가 필요하면 `npm run app:dev`.
 
-ffmpeg·ffprobe는 PATH에서 먼저 찾고, 없으면 최초 오디오/영상 투입 시 `<root>/bin/`으로
-조달한다. **번들하지 않는다** (§9.7 · §20.8). `setup.sh`는 그 규칙을 우회하는 것이 아니라
-§9.7 단계 1(PATH)을 미리 채워 둘 뿐이다.
+### 아이콘
+
+원본은 [`ui/icon.svg`](ui/icon.svg) 하나다. 고치고 `npm run icon` 을 돌리면
+`src-tauri/icons/` 전체(icns · ico · png · Windows 스토어 타일)가 다시 만들어진다.
+생성물은 커밋되어 있으므로 빌드에 별도 준비가 필요하지 않다.
+
+### 다른 기계로 옮길 때
+
+`.app` 을 복사해도 **ffmpeg·yt-dlp 는 따라가지 않는다.** 번들하지 않기 때문이다
+(§9.7 · §20.8). API 키도 마찬가지로 OS 키체인에 있지 바이너리에 없다.
+
+빠진 것이 있으면 앱이 조용히 반쪽으로 동작하지 않고 **설정 → 진단**이 무엇이 멈추고
+무엇은 멀쩡한지, 그리고 그 플랫폼의 설치 명령을 함께 적어 준다. ffmpeg 이 없으면
+영상·오디오 경로만 죽고, yt-dlp 가 없는 것은 오류가 아니다 — YouTube 가 썸네일+메타데이터
+경로로 처리되어 `quality: minimal` 로 기록될 뿐이다 (§9.3 단계 6).
+새 기계라면 `scripts/setup.sh` 가 한 번에 채운다.
 
 ---
 

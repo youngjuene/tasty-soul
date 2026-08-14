@@ -223,8 +223,10 @@ export const doctorReport: DoctorReport = {
   ],
   embed_ok: true,
   embed_error: null,
-  ffmpeg: "ffmpeg version 8.1.2",
-  ffprobe: "ffprobe version 8.1.2",
+  // 셋 다 없는 상태로 둔다 — 앱을 다른 기계로 옮겼을 때가 정확히 이 모습이고,
+  // 진단 화면의 안내 문구(무엇이 멈추는가 · 어떻게 설치하는가)가 그때 필요하다 (§9.7).
+  ffmpeg: null,
+  ffprobe: null,
   ytdlp: null,
   git_ok: true,
   soul_md_ok: true,

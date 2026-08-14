@@ -715,3 +715,19 @@
 .doc-maint-row > div { flex: 1; min-width: 0; }
 .doc-maint-row .doc-legend { margin-top: 0.25rem; }
 .doc-maint-row .doc-btn { flex: none; }
+
+/* 진단 표에서 없는 외부 도구의 결과를 알린다 (§9.7 — 번들하지 않으므로 안내가 필요하다). */
+.doc-tool-warn {
+  margin-top: 0.35rem;
+  color: var(--warn);
+  font-size: var(--text-sm);
+  line-height: var(--leading);
+}
+.doc-tool-warn code,
+.doc-legend code {
+  font-family: var(--mono);
+  font-size: 0.95em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunk);
+}
