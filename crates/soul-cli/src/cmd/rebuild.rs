@@ -185,33 +185,10 @@ fn report_render(paths: &Paths, report: &RebuildReport, derived: &Derived) {
     }
 }
 
-/// `soul stats`가 쓰는 것과 같은 규칙으로 활성 ingest의 임베딩을 모은다.
-///
-/// 하나라도 없으면 `None` — 부분 집합으로 군집을 만들면 §R5의 결정론이 깨진다.
-pub(crate) fn object_vectors(
-    db: &Db,
-    set: &ObsSet,
-    cfg: &soul_core::config::Config,
-) -> Option<Vec<Vec<f32>>> {
-    use soul_core::db::embed_cache::cache_key;
-
-    let mut out = Vec::new();
-    for i in set.active_ingests() {
-        let key = cache_key(
-            core_rebuild::EMBED_PROVIDER,
-            &cfg.embed.model,
-            cfg.embed.dims,
-            &i.machine.prose,
-        );
-        match db.embed_get(&key) {
-            Ok(Some(v)) => out.push(v),
-            _ => return None,
-        }
-    }
-    Some(out)
-}
-
 /// `Store`를 쓰는 쪽이 매번 같은 문장을 반복하지 않도록 모아 둔다.
+///
+/// 활성 ingest 임베딩 수집과 군집 수는 `soul_core::derived::{object_vectors, cluster_k}`
+/// 로 옮겼다 — CLI 와 MCP 가 같은 규칙을 써야 한다.
 pub(crate) fn load_set(paths: &Paths) -> Result<ObsSet> {
     Ok(Store::new(paths.clone()).load_set()?)
 }
@@ -436,38 +413,5 @@ mod tests {
         let paths = temp_paths();
         render(&paths, true).unwrap();
         assert_eq!(latest_commit(&paths), format!("render {NULL_GLYPH}"));
-    }
-
-    // ─────────────────────────────────────────────── object_vectors (§R9)
-
-    /// §R9 — supersede된 ingest는 `active_ingests()`가 걸러 낸다. 그 항목의 임베딩이
-    /// 캐시에 없어도 `None`이 되면 안 된다. 되면 recast 한 번에 군집이 영구히 `—`가 된다.
-    #[test]
-    fn object_vectors_ignores_superseded_ingests() {
-        let paths = temp_paths();
-        let old = "낡은 서술";
-        let new = "다시 쓴 서술";
-        write_obs(&paths, &ingest(1, old, None));
-        write_obs(&paths, &ingest(2, new, Some(id(1))));
-        // **새 것만** 워밍한다.
-        let db = warm(&paths, &[new]);
-        let cfg = Config::load(&paths.config_toml()).unwrap();
-        let set = load_set(&paths).unwrap();
-
-        let v = object_vectors(&db, &set, &cfg).expect("활성 ingest 것만 있으면 충분하다");
-        assert_eq!(v.len(), 1);
-    }
-
-    /// 활성 ingest 중 하나라도 미스면 `None`이다 — 부분 집합으로 군집을 만들지 않는다 (§R5).
-    #[test]
-    fn object_vectors_is_none_when_any_active_ingest_misses() {
-        let paths = temp_paths();
-        write_obs(&paths, &ingest(1, "첫째", None));
-        write_obs(&paths, &ingest(2, "둘째", None));
-        let db = warm(&paths, &["첫째"]);
-        let cfg = Config::load(&paths.config_toml()).unwrap();
-        let set = load_set(&paths).unwrap();
-
-        assert!(object_vectors(&db, &set, &cfg).is_none());
     }
 }

@@ -183,12 +183,16 @@ fn coherence(c: Option<&Coherence>) -> Value {
 /// §19.3 — 관측 수, 기간, 현재 달 `crystal`, 군집 수.
 fn stats(ctx: &Ctx) -> Value {
     let d: Derived = ctx.derived();
-    // 군집 수는 캐시된 것을 그대로 읽는다. 여기서 k-means를 다시 돌리지 않는다 (§12.3).
-    let cluster_k = ctx
-        .db
-        .as_ref()
-        .and_then(|db| db.cluster_get().ok().flatten())
-        .map(|(_, c)| c.k);
+    // 계산 규칙은 `soul_core::derived::cluster_k` 하나뿐이다. CLI 도 같은 것을 쓴다.
+    //
+    // 캐시만 읽던 때는 `soul rebuild --from-scratch` 직후에 CLI 가 `군집 8`, 여기가
+    // `null` 을 말했다. 같은 저장소에 두 답이 나오면 로컬 에이전트가 무엇을 믿어야
+    // 할지 알 수 없다.
+    let cluster_k = ctx.db.as_ref().and_then(|db| {
+        soul_core::derived::cluster_k(db, &ctx.set, &ctx.config)
+            .ok()
+            .flatten()
+    });
     let s = soul_core::derived::stats::build(&d, &ctx.set, cluster_k);
 
     json!({

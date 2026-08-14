@@ -11,7 +11,7 @@ use anyhow::Result;
 use soul_core::canon;
 use soul_core::config::Config;
 use soul_core::db::Db;
-use soul_core::derived::{cluster, stats as core_stats, Derived};
+use soul_core::derived::{stats as core_stats, Derived};
 use soul_core::obs::{Axis, ObsSet};
 use soul_core::paths::Paths;
 use soul_core::rebuild;
@@ -178,22 +178,15 @@ fn counts(m: &BTreeMap<String, usize>) -> String {
 /// 다시 계산하고(고정 시드 42라 두 번 돌려도 같다, T12), 하나라도 없으면
 /// 캐시된 값으로 물러난다. 둘 다 없으면 `None` → `—`로 렌더된다 (§R10).
 fn cluster_k(paths: &Paths, set: &ObsSet) -> Result<Option<usize>> {
+    // 계산 규칙은 `soul_core::derived::cluster_k` 하나뿐이다. MCP 도 같은 것을 쓴다 —
+    // 같은 저장소에 두 답이 나오면 둘 다 못 믿는다.
     let db_path = paths.derived_db();
     if !db_path.is_file() {
         return Ok(None);
     }
     let db = Db::open(&db_path)?;
     let cfg = Config::load(&paths.config_toml())?;
-    if let Some(vectors) = super::rebuild::object_vectors(&db, set, &cfg) {
-        if let Some(c) = cluster::cluster(&vectors) {
-            return Ok(Some(c.k));
-        }
-        // n < 4면 군집이 없는 것이 정답이다. 캐시로 물러나지 않는다.
-        if vectors.len() < 4 {
-            return Ok(None);
-        }
-    }
-    Ok(db.cluster_get()?.map(|(_, c)| c.k))
+    Ok(soul_core::derived::cluster_k(&db, set, &cfg)?)
 }
 
 #[cfg(test)]

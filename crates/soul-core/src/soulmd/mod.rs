@@ -24,7 +24,12 @@ pub fn fmt_change(v: Option<f64>) -> String {
         None => NULL_GLYPH.to_string(),
         Some(x) => {
             let r = (x * 100.0).round() / 100.0;
-            if r < 0.0 {
+            // `-0.0 < 0.0` 은 IEEE754 에서 **거짓**이다. 그래서 -0.001 은 else 로 떨어지고
+            // `format!("+{:.2}", -0.0)` 이 `"+-0.00"` 이라는 망가진 문자열을 만들었다.
+            // 0으로 반올림되면 부호는 의미가 없으므로 `+0.00` 으로 못박는다.
+            if r == 0.0 {
+                "+0.00".to_string()
+            } else if r < 0.0 {
                 format!("{}{:.2}", MINUS, -r)
             } else {
                 format!("+{r:.2}")
@@ -37,7 +42,20 @@ pub fn fmt_change(v: Option<f64>) -> String {
 pub fn fmt_value(v: Option<f64>) -> String {
     match v {
         None => NULL_GLYPH.to_string(),
-        Some(x) => format!("{x:.2}"),
+        Some(x) => {
+            // 소수 둘째 자리에서 0이 되면 **부호를 떼고** `0.00` 으로 적는다.
+            //
+            // `format!("{:.2}")` 는 -0.002882 를 `-0.00` 으로 만든다. 읽는 사람에게는
+            // 서식 오류처럼 보이고, 실제로는 0에 가까운 값인데 "음수"라는 인상을 준다.
+            // 실루엣 계수(§12.5의 `crystal`)는 음수가 될 수 있어서 실제로 나타난다.
+            // `canon::round6` 이 JSON 에서 같은 정규화를 하는 것과 같은 취지다.
+            let r = (x * 100.0).round() / 100.0;
+            if r == 0.0 {
+                "0.00".to_string()
+            } else {
+                format!("{r:.2}")
+            }
+        }
     }
 }
 
@@ -58,5 +76,31 @@ mod tests {
     fn value_is_two_decimals() {
         assert_eq!(fmt_value(Some(0.3)), "0.30");
         assert_eq!(fmt_value(None), "—");
+        assert_eq!(
+            fmt_value(Some(-0.42)),
+            "-0.42",
+            "진짜 음수는 부호를 유지한다"
+        );
+    }
+
+    /// 0으로 반올림되는 음수가 `-0.00` 으로 새지 않는다.
+    ///
+    /// 실루엣 계수는 음수가 될 수 있어서(§12.5) 실제 데이터에서 나타났다.
+    /// `해상도 -0.00` 은 서식 오류처럼 보인다.
+    #[test]
+    fn value_never_renders_negative_zero() {
+        assert_eq!(fmt_value(Some(-0.002882)), "0.00");
+        assert_eq!(fmt_value(Some(-0.0)), "0.00");
+        assert_eq!(fmt_value(Some(-0.004)), "0.00");
+        assert_eq!(fmt_value(Some(0.0)), "0.00");
+        // 반올림해도 0이 아니면 그대로 음수다.
+        assert_eq!(fmt_value(Some(-0.006)), "-0.01");
+    }
+
+    /// `fmt_change` 는 부호를 일부러 붙이지만 `−0.00` 을 내지 않는다.
+    #[test]
+    fn change_never_renders_negative_zero() {
+        assert_eq!(fmt_change(Some(-0.001)), "+0.00");
+        assert_eq!(fmt_change(Some(-0.0)), "+0.00");
     }
 }

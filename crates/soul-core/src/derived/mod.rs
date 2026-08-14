@@ -174,6 +174,56 @@ pub struct MonthState {
     pub n: usize,
 }
 
+/// §R9 순서대로의 활성 ingest `machine.prose` 임베딩. 하나라도 캐시에 없으면 `None`.
+///
+/// 군집 입력은 **활성 ingest 의 서술문뿐**이다 (§12.7). `obs_vec` ID 색인이 아니라
+/// 텍스트 키 캐시로 조회하므로, `--from-scratch` 가 색인을 비운 뒤에도 동작한다.
+pub fn object_vectors(
+    db: &crate::db::Db,
+    set: &ObsSet,
+    cfg: &crate::config::Config,
+) -> Option<Vec<Vec<f32>>> {
+    let mut out = Vec::new();
+    for i in set.active_ingests() {
+        let key = crate::db::embed_cache::cache_key(
+            crate::rebuild::EMBED_PROVIDER,
+            &cfg.embed.model,
+            cfg.embed.dims,
+            &i.machine.prose,
+        );
+        match db.embed_get(&key) {
+            Ok(Some(v)) => out.push(v),
+            _ => return None,
+        }
+    }
+    Some(out)
+}
+
+/// 현재 군집 수 (§12.3). **모든 표면이 이 함수를 쓴다.**
+///
+/// 캐시(`cluster_cache`)만 읽으면 `soul rebuild --from-scratch` 직후처럼 캐시가 빈
+/// 상태에서 `null` 이 나온다. 그런데 같은 저장소를 두고 CLI 는 8, MCP 는 null 을
+/// 말하는 상황이 실제로 있었다 — **같은 사실에 두 답이 나오면 둘 다 못 믿는다.**
+///
+/// 그래서 순서를 하나로 못박는다: 임베딩이 다 있으면 계산하고, 아니면 캐시로 물러난다.
+/// k-means 는 O(n) 이라 5,000건에서도 읽기 경로 예산 안이다 (§20.1).
+pub fn cluster_k(
+    db: &crate::db::Db,
+    set: &ObsSet,
+    cfg: &crate::config::Config,
+) -> crate::Result<Option<usize>> {
+    if let Some(vectors) = object_vectors(db, set, cfg) {
+        if let Some(c) = cluster::cluster(&vectors) {
+            return Ok(Some(c.k));
+        }
+        // `n < 4` 면 군집이 없는 것이 정답이다 (§12.3). 캐시로 물러나지 않는다.
+        if vectors.len() < 4 {
+            return Ok(None);
+        }
+    }
+    Ok(db.cluster_get()?.map(|(_, c)| c.k))
+}
+
 /// 파생 층 전체를 한 번에 계산한다 (`soul rebuild`·`soul render`의 유일한 진입점).
 ///
 /// 증분 경로(§20.7)는 이것을 부르지 않고 누산기를 갱신하지만, 결과는 반드시 일치해야 한다.
@@ -417,5 +467,92 @@ mod tests {
         assert_eq!(d.misread_ratio, None);
         assert_eq!(d.divergence_sensory, None);
         assert_eq!(d.divergence_cultural, None);
+    }
+
+    // ──────────────────────────────────── object_vectors · cluster_k (§R9 · §12.3)
+
+    /// 임베딩 캐시를 워밍한 메모리 DB.
+    fn warm_db(texts: &[&str], cfg: &crate::config::Config) -> crate::db::Db {
+        let db = crate::db::Db::open_in_memory().expect("db");
+        for t in texts {
+            let key = crate::db::embed_cache::cache_key(
+                crate::rebuild::EMBED_PROVIDER,
+                &cfg.embed.model,
+                cfg.embed.dims,
+                t,
+            );
+            // 내용은 중요하지 않다. 차원만 맞으면 된다.
+            let v: Vec<f32> = (0..cfg.embed.dims)
+                .map(|i| ((i as f32) * 0.01 + t.len() as f32).sin())
+                .collect();
+            db.embed_put(&key, cfg.embed.dims, &v).expect("put");
+        }
+        db
+    }
+
+    /// §R9 — supersede된 ingest 는 `active_ingests()` 가 걸러 낸다. 그 항목의 임베딩이
+    /// 캐시에 없어도 `None` 이 되면 안 된다. 되면 recast 한 번에 군집이 영구히 `—` 가 된다.
+    #[test]
+    fn object_vectors_ignores_superseded_ingests() {
+        let cfg = crate::config::Config::default();
+        let old = ingest("2026-03-01T00:00:00.000Z", "낡은 서술", "a", None);
+        let new = ingest(
+            "2026-03-02T00:00:00.000Z",
+            "다시 쓴 서술",
+            "a",
+            Some(old.id().clone()),
+        );
+        let set = ObsSet::new(vec![old, new]);
+        // **새 것만** 워밍한다.
+        let db = warm_db(&["다시 쓴 서술"], &cfg);
+        let v = object_vectors(&db, &set, &cfg).expect("활성 ingest 것만 있으면 충분하다");
+        assert_eq!(v.len(), 1);
+    }
+
+    /// 활성 ingest 중 하나라도 미스면 `None` 이다 — 부분 집합으로 군집을 만들지 않는다 (§R5).
+    #[test]
+    fn object_vectors_is_none_when_any_active_ingest_misses() {
+        let cfg = crate::config::Config::default();
+        let set = ObsSet::new(vec![
+            ingest("2026-03-01T00:00:00.000Z", "첫째", "a", None),
+            ingest("2026-03-02T00:00:00.000Z", "둘째", "a", None),
+        ]);
+        let db = warm_db(&["첫째"], &cfg);
+        assert!(object_vectors(&db, &set, &cfg).is_none());
+    }
+
+    /// 캐시가 비어 있어도 계산해서 답한다.
+    ///
+    /// 캐시만 읽던 시절에는 `soul rebuild --from-scratch` 직후 같은 저장소를 두고
+    /// CLI 는 `군집 8`, MCP 는 `null` 을 말했다. **같은 사실에 두 답이 나오면 둘 다 못 믿는다.**
+    #[test]
+    fn cluster_k_is_computed_when_the_cache_is_empty() {
+        let cfg = crate::config::Config::default();
+        let texts: Vec<String> = (0..12).map(|i| format!("서술 {i}")).collect();
+        let obs: Vec<Observation> = texts
+            .iter()
+            .enumerate()
+            .map(|(i, t)| ingest(&format!("2026-03-{:02}T00:00:00.000Z", i + 1), t, "a", None))
+            .collect();
+        let set = ObsSet::new(obs);
+        let refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
+        let db = warm_db(&refs, &cfg);
+
+        assert!(db.cluster_get().unwrap().is_none(), "캐시는 비어 있다");
+        let k = cluster_k(&db, &set, &cfg).unwrap();
+        // n=12 → k = clamp(round(sqrt(6)), 2, 8) = 2
+        assert_eq!(k, Some(cluster::choose_k(12)));
+    }
+
+    /// `n < 4` 면 군집이 없는 것이 정답이다 (§12.3). 캐시로 물러나지 않는다.
+    #[test]
+    fn cluster_k_is_none_below_four_observations() {
+        let cfg = crate::config::Config::default();
+        let set = ObsSet::new(vec![
+            ingest("2026-03-01T00:00:00.000Z", "하나", "a", None),
+            ingest("2026-03-02T00:00:00.000Z", "둘", "a", None),
+        ]);
+        let db = warm_db(&["하나", "둘"], &cfg);
+        assert_eq!(cluster_k(&db, &set, &cfg).unwrap(), None);
     }
 }
