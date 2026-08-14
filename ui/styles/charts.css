@@ -250,39 +250,6 @@
   margin-left: 2px;
 }
 
-/* ───────────────────────────────────────────────────── 시간 축 스트립 */
-
-.strip {
-  margin-top: 2px;
-}
-.strip-axis {
-  stroke: var(--ch-line);
-  stroke-width: 1;
-}
-.strip-tick circle {
-  fill: var(--ch-mark);
-}
-.strip-tick.is-skipped circle {
-  fill: none;
-  stroke: var(--ch-faint);
-  stroke-width: 1;
-  stroke-dasharray: 1.5 1.5;
-}
-.strip-tick text {
-  fill: var(--ch-faint);
-  font-size: 9.5px;
-  font-variant-numeric: tabular-nums;
-}
-.strip-boundary line {
-  stroke: var(--ch-cell-other);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-}
-.strip-boundary text {
-  fill: var(--ch-cell-other);
-  font-size: 9px;
-}
-
 /* ───────────────────────────────────────────────────── 2×2 셀 */
 
 .chart-cellgrid {
@@ -494,9 +461,6 @@
   border-radius: 8px;
   padding: 18px 20px 20px;
   min-width: 0;
-}
-.panel-wide {
-  grid-column: 1 / -1;
 }
 .panel h2 {
   font-size: 13.5px;

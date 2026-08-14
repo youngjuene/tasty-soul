@@ -139,7 +139,7 @@ export interface Derived {
   axes_change: AxesChange;
 
   cells: CellCounts;
-  /** 최근 30일 셀 추이 (대시보드 패널 2의 화살표용). */
+  /** 최근 30일 셀 추이 (2×2 격자의 추이 화살표용). */
   cells_recent30: CellCounts;
   /**
    * §8.2 `정정 N건` — `prose != null` 인 reading 수(두 층 합산).
@@ -155,12 +155,22 @@ export interface Derived {
   coherence_sensory: Coherence | null;
   coherence_cultural: Coherence | null;
 
-  /** §12.5 — 월별 상태. `M` 전체. 대시보드 패널 1이 시간순으로 잇는다. */
+  /**
+   * §12.5 — 월별 상태. `M` 전체.
+   *
+   * **지금 이 값을 그리는 화면이 없다.** 대시보드가 `(drift, crystal)` 경로로
+   * 잇던 패널을 뺐다. 백엔드 계약이므로 타입은 그대로 둔다.
+   */
   timeline: MonthState[];
   crystal_now: number | null;
   misread_ratio: number | null;
 
-  /** §R11 — `prompt_sha256`이 바뀌는 지점. 패널 1·3이 세로 구분선을 긋는다. */
+  /**
+   * §R11 — `prompt_sha256`이 바뀌는 지점.
+   *
+   * 시간 축 위의 세로 구분선은 사라졌고(그 패널을 뺐다), 지금은 **개수만** 쓴다 —
+   * 축 패널의 경고가 "질문지가 N번 바뀌었다"고 말할 때 그 N이다.
+   */
   prompt_boundaries: PromptBoundary[];
 }
 
@@ -581,11 +591,11 @@ export const TERMS = {
     id: "cluster",
     gloss: "비슷한 것끼리 자동으로 묶은 덩어리. 번호에 순서나 좋고 나쁨은 없습니다.",
   },
-  drift: {
-    name: "변화",
-    id: "drift",
-    gloss: "지난달과 견줘 취향이 얼마나 움직였는가. 클수록 많이 움직였습니다.",
-  },
+  /*
+    `drift` 는 여기 없다. 그 값을 그리던 대시보드 패널을 뺐고, `SOUL.md` 도
+    `drift` 를 적지 않는다 — 축 표의 "90일 변화"는 `axes_change` 다.
+    화면에 다시 나오면 그때 이름을 붙인다.
+  */
   crystal: {
     name: "또렷함",
     id: "crystal",

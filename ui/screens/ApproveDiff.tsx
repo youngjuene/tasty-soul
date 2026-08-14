@@ -102,7 +102,7 @@ export function ApproveDiff() {
         </div>
       </header>
       {/*
-        무엇이 전송되는지는 줄이지 않는다 (`ui/README.md` 6). 다만 "성찰"이 무엇인지
+        무엇이 전송되는지는 줄이지 않는다 (`ui/README.md` 7 — 프라이버시 문구). 다만 "성찰"이 무엇인지
         모르는 채로 그 경고만 읽으면 무엇을 승인하는지 모르고 누르게 된다.
       */}
       <p className="doc-lead">
