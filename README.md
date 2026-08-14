@@ -116,6 +116,18 @@ soul secrets delete openai
 환경에 남는다. 켜져 있어도 **키체인이 먼저다**(셸에 남은 오래된 키가 설정 화면에서 넣은
 키를 조용히 덮어쓰지 않게).
 
+## 화면
+
+인터페이스는 전부 [`ui/`](ui/) 안에 있다. 디자인 작업은 그 디렉토리만 보면 된다 —
+브리프는 [`ui/README.md`](ui/README.md), 토큰은 [`ui/TOKENS.md`](ui/TOKENS.md).
+
+```bash
+npm run design      # Rust · Tauri · API 키 없이 화면만 띄운다 (localhost:1421)
+```
+
+`ui/preview/` 가 백엔드 커맨드 28개를 전부 가짜로 대신하므로 브라우저에서
+모든 화면이 실제 데이터 모양 그대로 뜬다.
+
 ## 개발
 
 ```bash

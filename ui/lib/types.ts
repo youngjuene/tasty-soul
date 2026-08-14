@@ -141,6 +141,14 @@ export interface Derived {
   cells: CellCounts;
   /** 최근 30일 셀 추이 (대시보드 패널 2의 화살표용). */
   cells_recent30: CellCounts;
+  /**
+   * §8.2 `정정 N건` — `prose != null` 인 reading 수(두 층 합산).
+   *
+   * `coherence_*.sample` 로 대신 세면 안 된다. `|R| < 2` 일 때 `Coherence` 자체가
+   * `null` 이라 정정이 실제로 있어도 0으로 보이고, 그것은 "정정한 적이 없다"는
+   * 거짓말이 된다. 개수는 측정된 값이라 §R10 의 `—` 규칙 대상이 아니다.
+   */
+  corrections_total: number;
   /** §12.6 — 대시보드에는 싣지 않는다. 화면 5는 2×2 격자만 둔다. */
   divergence_sensory: number | null;
   divergence_cultural: number | null;

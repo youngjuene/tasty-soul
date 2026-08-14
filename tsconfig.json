@@ -17,5 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": false
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["ui", "vite.config.ts"],
+  // vite 설정 파일은 vite 가 esbuild 로 직접 처리한다. 앱 타입검사에 넣으면
+  // node 전역(__dirname 등) 때문에 @types/node 를 앱 의존성으로 끌어와야 한다.
+  "exclude": ["ui/preview/vite.config.ts"]
 }

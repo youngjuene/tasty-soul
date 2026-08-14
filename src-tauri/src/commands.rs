@@ -384,7 +384,7 @@ mod pipeline_support {
         /// 한쪽만 바꾸면 아무것도 실패하지 않고 진행 표시만 조용히 죽는다.
         #[test]
         fn progress_event_name_matches_the_screen() {
-            let screen = include_str!("../../src/screens/Ingest.tsx");
+            let screen = include_str!("../../ui/screens/Ingest.tsx");
             assert!(
                 screen.contains(&format!("\"{PROGRESS_EVENT}\"")),
                 "Ingest.tsx가 {PROGRESS_EVENT} 를 듣지 않는다"
