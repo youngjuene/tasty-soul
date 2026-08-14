@@ -135,12 +135,22 @@ cargo test --workspace          # 인수 테스트는 완전 오프라인이다 
 ./ci/check-deps.sh              # 크레이트 경계 (§19.4)
 cargo clippy --workspace --all-targets -- -D warnings
 
-npm run tauri dev               # 앱
+npm run tauri dev               # 앱 (개발 서버 사용)
+npm run tauri build -- --no-bundle   # 릴리즈 바이너리 → target/release/tasty-soul
 cargo run -p soul-cli -- doctor # CLI 진단
 cargo run -p soul-cli -- doctor --probe   # 모델 슬롯까지 (네트워크 사용, §9.9)
 
 SOUL_E2E=1 cargo test --workspace -- --ignored   # 네트워크가 필요한 테스트
+
+# API 키 없이 읽기 경로(파생 층·SOUL.md·아카이브·MCP)를 실데이터로 시험한다
+cargo run -p soul-core --example seed -- /tmp/soul-demo 120
+SOUL_ROOT=/tmp/soul-demo cargo run -p soul-cli -- render
 ```
+
+> **`./target/debug/tasty-soul` 을 직접 실행하면 창이 빈 채로 뜬다.** 버그가 아니다 —
+> 디버그 빌드는 `tauri.conf.json` 의 `devUrl`(`localhost:1420`)을 가리키므로 개발 서버가
+> 없으면 아무것도 못 불러온다. 디버그로 볼 때는 `npm run tauri dev`, 배포본을 볼 때는
+> `npm run tauri build` 로 만든 `target/release/tasty-soul` 을 쓴다 (자산이 바이너리에 박힌다).
 
 ffmpeg·ffprobe는 PATH에서 먼저 찾고, 없으면 최초 오디오/영상 투입 시 `<root>/bin/`으로
 조달한다. **번들하지 않는다** (§9.7 · §20.8). `setup.sh`는 그 규칙을 우회하는 것이 아니라
