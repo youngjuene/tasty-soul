@@ -22,7 +22,7 @@ soul-core = { version = "0.1.0", path = "../crates/soul-core" }
 soul-media = { version = "0.1.0", path = "../crates/soul-media" }
 soul-net = { version = "0.1.0", path = "../crates/soul-net" }
 soul-pipeline = { version = "0.1.0", path = "../crates/soul-pipeline" }
-tauri = "2.11.5"
+tauri = { version = "2.11.5", features = [] }
 tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-global-shortcut = "2.3.2"
@@ -31,4 +31,4 @@ tauri-plugin-single-instance = "2.4.3"
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "sync", "time", "fs"] }
 
 [build-dependencies]
-tauri-build = "2.6.3"
+tauri-build = { version = "2.6.3", features = [] }

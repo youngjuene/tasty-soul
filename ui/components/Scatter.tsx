@@ -92,7 +92,10 @@ export function niceTicks(a: number, b: number, count: number): number[] {
 }
 
 function fmtTick(v: number): string {
-  const r = Math.round(v * 1000) / 1000;
+  // `-0` 을 내지 않는다. `(-0.0004).toFixed(2)` → `"-0.00"` → 뒤 0 제거 → `"-0"` 이라
+  // 축 눈금에 `-0` 이 줄줄이 찍혔다. 0이면 부호를 뗀다.
+  const r0 = Math.round(v * 1000) / 1000;
+  const r = r0 === 0 ? 0 : r0;
   if (Number.isInteger(r)) return String(r);
   return r.toFixed(Math.abs(r) < 1 ? 2 : 1).replace(/0+$/, "").replace(/\.$/, "");
 }

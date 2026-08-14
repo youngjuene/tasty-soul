@@ -490,16 +490,34 @@ export const TILE_PROSE_CHARS = 40;
 /** §R10 — `null` 파생값의 표기. 0으로 대체하거나 항목을 생략하지 않는다. */
 export const EM_DASH = "—";
 
+/**
+ * 표시 자릿수로 반올림하고, 0이 되면 **부호를 뗀다.**
+ *
+ * `(-0.002882).toFixed(2)` 는 `"-0.00"` 이다. 읽는 사람에게는 서식 오류처럼 보이고,
+ * 0에 가까운 값인데 "음수"라는 인상을 준다. 실루엣 계수(§12.5의 `crystal`)는 음수가
+ * 될 수 있어 실제 데이터에서 나타난다 — 대시보드 헤더에 `해상도 -0.00` 으로 떴다.
+ *
+ * Rust 쪽 `soulmd::fmt_value` 도 같은 정규화를 한다. **두 곳이 어긋나면 같은 값이
+ * `SOUL.md` 와 화면에서 다르게 보인다.**
+ */
+function roundForDisplay(v: number, digits: number): number {
+  const f = 10 ** digits;
+  const r = Math.round(v * f) / f;
+  return r === 0 ? 0 : r;
+}
+
 /** 수치를 소수 `digits` 자리로 렌더한다. `null`/`undefined`/`NaN` 은 `—`. */
 export function dash(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return EM_DASH;
-  return v.toFixed(digits);
+  return roundForDisplay(v, digits).toFixed(digits);
 }
 
 /** 변화량을 부호와 함께 렌더한다 (§8.2.1). `null` 은 `—`. */
 export function dashSigned(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return EM_DASH;
-  return (v < 0 ? "−" : "+") + Math.abs(v).toFixed(digits);
+  const r = roundForDisplay(v, digits);
+  // 0으로 반올림되면 부호는 의미가 없다. `−0.00` 을 내지 않는다.
+  return (r < 0 ? "−" : "+") + Math.abs(r).toFixed(digits);
 }
 
 /** 문자열을 렌더한다. 비었거나 `null` 이면 `—`. */
