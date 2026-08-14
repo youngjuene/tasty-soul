@@ -14,6 +14,7 @@ import type { SetupStatus } from "./lib/types";
 
 import BoundaryNotice from "./components/BoundaryNotice";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Alignment from "./screens/Alignment";
 import Archive from "./screens/Archive";
 import ApproveDiff from "./screens/ApproveDiff";
 import CulturalCardList from "./screens/CulturalCard";
@@ -39,6 +40,12 @@ export default function App() {
   const [culturalOpen, setCulturalOpen] = useState(false);
   /** 대시보드에서 셀을 눌러 아카이브로 넘어올 때의 초기 패싯 (§13 화면 6). */
   const [archiveCell, setArchiveCell] = useState<string | null>(null);
+  /**
+   * SOUL 화면 안에서 문서가 바뀐 횟수. 저장과 승인이 올리고, 어긋남 패널이 이 값을
+   * 보고 다시 읽는다. **문서가 방금 바뀌었으면 그 숫자도 방금 바뀐 것이다** —
+   * 셋이 한 화면에 있으므로 옆에서 낡은 값을 들고 있으면 바로 보인다.
+   */
+  const [soulRev, setSoulRev] = useState(0);
 
   const loadStatus = useCallback(async () => {
     try {
@@ -182,8 +189,9 @@ export default function App() {
         {tab === "soul" && (
           <ErrorBoundary screen="SOUL">
             <div className="stack-lg">
-              <SoulDoc />
-              <ApproveDiff />
+              <SoulDoc onSaved={() => setSoulRev((n) => n + 1)} refreshKey={soulRev} />
+              <Alignment refreshKey={soulRev} />
+              <ApproveDiff onApproved={() => setSoulRev((n) => n + 1)} />
             </div>
           </ErrorBoundary>
         )}

@@ -767,3 +767,94 @@
   border-radius: var(--radius-sm);
   background: var(--bg-sunk);
 }
+
+/* ─────────────────────────────────────────────────── 어긋남 (화면 3 곁)
+
+   `SOUL.md` 의 `## 어긋남` 한 줄을 펴 놓은 자리. 문서 바로 아래에 붙으므로
+   문서보다 조용해야 한다 — 여기가 시선을 먼저 끌면 주인공이 뒤바뀐다. */
+
+.align-top {
+  display: flex;
+  gap: 2rem;
+  margin: 0 0 1.25rem;
+  flex-wrap: wrap;
+}
+
+.align-top div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.align-top dt {
+  font-size: 0.86rem;
+  color: var(--doc-muted);
+}
+
+.align-top dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.align-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--doc-line-soft);
+}
+
+.align-row:first-of-type {
+  border-top: none;
+}
+
+.align-layer {
+  flex: 0 0 5.5rem;
+  color: var(--doc-muted);
+  font-size: 0.9rem;
+  padding-top: 1px;
+}
+
+.align-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/*
+   세 갈래를 색으로도 갈라 둔다. 다만 «아직»은 경고색이 아니다 — 나쁜 상태가
+   아니라 아직 모르는 상태이고, 그 둘을 같은 색으로 칠하면 문구가 아무리
+   조심스러워도 화면이 먼저 "문제 있음"이라고 말해 버린다.
+*/
+.align-verdict {
+  margin: 0;
+  font-weight: 600;
+}
+
+.align-verdict.is-yes {
+  color: var(--doc-accent);
+}
+
+.align-verdict.is-soon,
+.align-verdict.is-none {
+  color: var(--doc-muted);
+  font-weight: 500;
+}
+
+.align-nums {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.align-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  max-width: 44rem;
+}
+
+.align-recent {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}

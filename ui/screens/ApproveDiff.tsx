@@ -20,7 +20,15 @@ import { Ref } from "../components/Explain";
 import { diffLines, diffStat, sideBySide, splitLines } from "../lib/diff";
 import "../styles/doc.css";
 
-export function ApproveDiff() {
+export interface ApproveDiffProps {
+  /**
+   * 승인이 끝난 뒤. 승인은 `soul_delta` 를 기록하고 `SOUL.md` 를 다시 렌더하므로
+   * 문서도 파생값도 달라진다. 거절은 아무것도 남기지 않으므로 부르지 않는다.
+   */
+  onApproved?: () => void;
+}
+
+export function ApproveDiff({ onApproved }: ApproveDiffProps = {}) {
   const [proposal, setProposal] = useState<ProposalView | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -66,6 +74,7 @@ export function ApproveDiff() {
       setProposal(null);
       setModifying(false);
       setDone(`승인했습니다 · ${id}`);
+      onApproved?.();
     } catch (e) {
       setError(errorText(e));
     } finally {

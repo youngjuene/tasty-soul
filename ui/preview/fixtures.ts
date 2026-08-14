@@ -87,7 +87,12 @@ export const derived: Derived = {
     examples: [items[0]!.id, items[1]!.id, items[2]!.id],
     systematic: true,
   },
-  coherence_cultural: { value: 0.44, sample: 6, examples: [], systematic: true },
+  /*
+    감각은 «방향이 있습니다», 문화는 «아직»으로 둔다 — 어긋남 패널의 두 갈래가
+    한 화면에 같이 떠야 색과 문구가 서로 어떻게 보이는지 판단할 수 있다.
+    0.21 < 0.40 이므로 `systematic: false` 가 Rust 규칙(§12.6)과도 맞는다.
+  */
+  coherence_cultural: { value: 0.21, sample: 6, examples: [], systematic: false },
   // 가운데 두 달이 `null` — 선이 끊기지 않아야 한다 (§13 화면 5).
   timeline: ["2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08"].map((m, i) => ({
     month: m,

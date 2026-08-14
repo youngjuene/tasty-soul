@@ -47,6 +47,7 @@ npm run design          # http://localhost:1421
 | `screens/SensoryCard.tsx` | 2 감각 글귀 | 썸네일 + 서술 + **버튼 2개** |
 | `screens/CulturalCard.tsx` | 2.1 문화 글귀 | 비평 + 계보 + 근거 + **버튼 2개** |
 | `screens/SoulDoc.tsx` | 3 SOUL.md | 마크다운 렌더 · 편집 토글 |
+| `screens/Alignment.tsx` | 3 곁 | 어긋남 — 문서의 `## 어긋남` 한 줄을 편다 |
 | `screens/ApproveDiff.tsx` | 4 승인 diff | 좌우 비교 · 승인/거절/수정 후 승인 |
 | `screens/Dashboard.tsx` | 5 대시보드 | 머리글 숫자 5개 + 패널 2개 |
 | `screens/Archive.tsx` | 6 아카이브 | 산점도 · 패싯 · 상세 |
@@ -109,6 +110,20 @@ d3, recharts, chart.js, victory 등을 `package.json` 에 추가하지 마라.
 
 `divergence_sensory` · `divergence_cultural` 은 데이터에 있지만 화면 5는
 **2×2 격자만** 둔다. 실수 두 개를 겹쳐 그리는 것보다 이산 격자가 훨씬 빨리 읽힌다.
+
+그 값들이 사는 곳은 **SOUL 화면의 `Alignment`** 다. 거기에는 격자가 없고, 바로 위에
+같은 숫자를 한 줄로 적은 문서가 있어 자리를 다투지 않는다.
+
+### 5-a. 어긋남을 실패로 그리지 마라
+
+`Alignment` 의 첫 문장은 "높다고 나쁜 것이 아닙니다" 다. 지우거나 뒤로 밀지 마라 —
+숫자를 먼저 읽으면 `0.31` 을 "31% 틀렸다"로 읽고, 그 순간 이 앱이 무엇을 하려는
+물건인지 정반대로 이해하게 된다. §12.6 이 `other_reason` 을 **이 시스템이 찾으려는
+것**이라고 못박은 것과 같은 이야기다. 어긋남이 0이면 배울 것이 없다.
+
+같은 이유로 «아직 방향이라 부를 만큼은 아닙니다» 에 **경고색을 쓰지 마라.**
+나쁜 상태가 아니라 아직 모르는 상태다. 문구를 아무리 조심스럽게 써도 색이 먼저
+"문제 있음"이라고 말해 버린다.
 
 ### 6. `other_reason` 칸은 강조를 유지한다
 

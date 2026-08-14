@@ -607,6 +607,24 @@ export const TERMS = {
     id: "misread_ratio",
     gloss: "기계의 서술을 '아니다'로 되돌린 비율입니다. 높다고 나쁜 것은 아닙니다.",
   },
+  corrections: {
+    name: "고쳐 쓴 것",
+    id: "corrections_total",
+    gloss: "«아니다»에 답하면서 직접 한 줄 써 넣은 횟수입니다. 두 카드를 합쳐 셉니다.",
+    doc: "정정",
+  },
+  coherence: {
+    name: "쏠림",
+    id: "coherence",
+    gloss:
+      "고쳐 쓴 문장들이 한쪽으로 몰려 있는가. 1에 가까울수록 늘 같은 식으로 빗나갔다는 뜻입니다.",
+    doc: "일관성",
+  },
+  divergence: {
+    name: "벌어진 거리",
+    id: "divergence",
+    gloss: "최근 30일, 기계가 쓴 문장과 내가 고쳐 쓴 문장이 얼마나 멀었는지의 평균입니다.",
+  },
   tRef: {
     name: "기준일",
     id: "T_ref",

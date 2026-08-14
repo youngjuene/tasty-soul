@@ -83,7 +83,20 @@ function MarkdownView({ src }: { src: string }) {
   );
 }
 
-export function SoulDoc() {
+export interface SoulDocProps {
+  /** 저장이 끝난 뒤. 저장은 `soul_delta` 관측을 만들므로 파생값이 실제로 달라진다. */
+  onSaved?: () => void;
+  /**
+   * 값이 바뀌면 파일을 다시 읽는다. **승인이 이걸 올린다** — 제안을 승인하면
+   * `SOUL.md` 가 다시 렌더되는데(§8.4), 그때까지 이 화면은 낡은 문서를 들고 있었다.
+   * 같은 화면 아래쪽에서 승인해 놓고 위쪽 문서가 그대로면 승인이 안 먹은 것처럼 보인다.
+   *
+   * 편집 중에는 무시한다 — 다시 읽으면 사용자가 쓰던 초안이 날아간다.
+   */
+  refreshKey?: number;
+}
+
+export function SoulDoc({ onSaved, refreshKey = 0 }: SoulDocProps = {}) {
   const [text, setText] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [editing, setEditing] = useState(false);
@@ -109,6 +122,33 @@ export function SoulDoc() {
       alive = false;
     };
   }, []);
+
+  // 승인 등으로 문서가 밖에서 바뀌었을 때 (마운트 때의 최초 읽기와는 별개다).
+  // 자기 저장으로도 한 번 더 돌지만 `save()` 가 이미 같은 값을 넣어 둔 뒤라
+  // `setText` 가 같은 문자열을 만나 다시 그리지 않는다 — 로컬 파일 읽기 한 번이 전부다.
+  const firstRefresh = useRef(true);
+  useEffect(() => {
+    if (firstRefresh.current) {
+      firstRefresh.current = false;
+      return;
+    }
+    if (editing) return;
+    let alive = true;
+    readSoulMd()
+      .then((fresh) => {
+        if (!alive) return;
+        setText(fresh);
+        setDraft(fresh);
+      })
+      .catch(() => {
+        /* 실패하면 화면에 있던 것을 그대로 둔다. 저장 경로에서 다시 드러난다. */
+      });
+    return () => {
+      alive = false;
+    };
+    // `editing` 은 의도적으로 뺀다 — 편집을 끝내는 것만으로 다시 읽히면 안 된다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const dirty = text !== null && draft !== text;
 
@@ -137,6 +177,7 @@ export function SoulDoc() {
       setDraft(fresh);
       setResult(r);
       setEditing(false);
+      onSaved?.();
     } catch (e) {
       // §8.4 2단계 — 파싱 실패면 파일을 되돌리지 않는다. 편집 상태를 그대로 둔다
       setError(errorText(e));
