@@ -17,13 +17,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { dashboard, errorText } from "../lib/api";
-import { AXES, AXIS_POLES, dash, dashDate, EM_DASH } from "../lib/types";
+import {
+  AXES,
+  AXIS_LABELS,
+  AXIS_POLES,
+  CELL_LABELS,
+  dash,
+  dashDate,
+  EM_DASH,
+  TERMS,
+} from "../lib/types";
 import type { CellName, Derived, MonthState, PromptBoundary } from "../lib/types";
 import Scatter from "../components/Scatter";
 import type { ScatterPoint } from "../components/Scatter";
 import CellGrid from "../components/CellGrid";
 import Bars from "../components/Bars";
 import type { BarDatum } from "../components/Bars";
+import Explain, { Ref } from "../components/Explain";
 import "../styles/charts.css";
 
 // ────────────────────────────────────────── ULID → 월 (§R11 경계 배치용)
@@ -102,9 +112,9 @@ function MonthStrip({ timeline, boundaries }: { timeline: MonthState[]; boundari
           <g key={`b${idx}`} className="strip-boundary">
             <line x1={x} y1={6} x2={x} y2={44} />
             <text x={x + 4} y={13}>
-              프롬프트 {shas.length > 1 ? `${shas.length}회` : shas[0]}
+              질문지 바뀜 {shas.length > 1 ? `${shas.length}회` : ""}
             </text>
-            <title>{`prompt_sha256 경계 (§R11) — ${shas.join(" · ")}\n이 지점 이후의 이동은 프롬프트 변경에서 왔을 수 있다`}</title>
+            <title>{`기계에 주는 질문지가 이 지점에서 바뀌었습니다 (prompt_sha256 · §R11)\n${shas.join(" · ")}\n이 뒤의 움직임은 취향이 아니라 질문이 바뀐 탓일 수 있습니다`}</title>
           </g>
         );
       })}
@@ -119,7 +129,7 @@ function MonthStrip({ timeline, boundaries }: { timeline: MonthState[]; boundari
                 {m.month}
               </text>
             )}
-            <title>{`${m.month} · 누적 ${m.n}건 · 변화 ${dash(m.drift)} · 구체화 ${dash(m.crystal)}`}</title>
+            <title>{`${m.month} · 누적 ${m.n}건 · 변화 ${dash(m.drift)} · 또렷함 ${dash(m.crystal)}`}</title>
           </g>
         );
       })}
@@ -178,9 +188,9 @@ export default function Dashboard({ onOpenArchive }: DashboardProps = {}) {
     return {
       topBars: known.slice(0, 3).map<BarDatum>((r) => ({
         key: r.axis,
-        label: r.axis,
+        label: AXIS_LABELS[r.axis],
         value: r.value,
-        hint: `${r.axis}\n0 · ${AXIS_POLES[r.axis][0]}\n1 · ${AXIS_POLES[r.axis][1]}`,
+        hint: `${AXIS_LABELS[r.axis]} (${r.axis})\n0 · ${AXIS_POLES[r.axis][0]}\n1 · ${AXIS_POLES[r.axis][1]}`,
       })),
       nullAxes: rows.filter((r) => r.value === null).map((r) => r.axis as string),
     };
@@ -215,8 +225,10 @@ export default function Dashboard({ onOpenArchive }: DashboardProps = {}) {
           <h1>대시보드</h1>
         </header>
         <div className="chart-empty-box">
-          <p>아직 관측이 없습니다.</p>
-          <p className="chart-empty-sub">무엇이든 투입하면 여기에 쌓입니다.</p>
+          <p>아직 아무것도 없습니다.</p>
+          <p className="chart-empty-sub">
+            «투입»에서 사진이든 링크든 하나 넣고 카드에 답하면 여기부터 쌓이기 시작합니다.
+          </p>
         </div>
       </div>
     );
@@ -228,68 +240,82 @@ export default function Dashboard({ onOpenArchive }: DashboardProps = {}) {
     <div className="dash">
       <header className="dash-head">
         <h1>대시보드</h1>
+        <p className="dash-lead">
+          지금까지 답한 것을 모아 놓은 자리입니다. 넣을수록 채워지고, 처음에는 대부분 비어 있습니다.
+        </p>
         <dl className="dash-meta">
           <div>
-            <dt>기준</dt>
+            <dt>기준일</dt>
             <dd>{dashDate(d.t_ref)}</dd>
           </div>
           <div>
-            <dt>관측</dt>
+            <dt>넣은 것</dt>
             <dd>{d.observation_count}</dd>
           </div>
           <div>
-            <dt>최초</dt>
+            <dt>시작</dt>
             <dd>{dashDate(d.t_first)}</dd>
           </div>
           <div>
             <dt>어긋남</dt>
             <dd>{dash(d.misread_ratio)}</dd>
           </div>
+          {/* `crystal` 은 한 이름으로만 부른다. 패널 1도 "또렷함"이다. */}
           <div>
-            <dt>해상도</dt>
+            <dt>또렷함</dt>
             <dd>{dash(d.crystal_now)}</dd>
           </div>
         </dl>
+        {/* 라벨이 "다섯"이라고 했으면 다섯 개가 다 있어야 한다. 셋만 풀면 나머지 둘은
+            설명할 가치가 없다는 뜻으로 읽힌다. */}
+        <Explain
+          label="이 다섯 숫자가 무슨 뜻인가요"
+          items={[TERMS.tRef, TERMS.count, TERMS.first, TERMS.misread, TERMS.crystal]}
+        />
       </header>
 
       <div className="dash-grid">
         {/* ───────────────────────── 패널 1 */}
         <section className="panel panel-wide">
-          <h2>변화 × 구체화</h2>
+          <h2>얼마나 움직였나 · 얼마나 또렷해졌나</h2>
           <p className="panel-sub">
-            달마다의 <b>변화</b>(직전 달과의 거리)와 <b>구체화</b>(군집이 또렷해진 정도). 시간순으로 이었다.
+            점 하나가 한 달입니다. 가로는 지난달과 견줘 취향이 <b>얼마나 움직였는지</b>, 세로는
+            취향의 윤곽이 <b>얼마나 또렷해졌는지</b>. 오래된 달부터 순서대로 이었습니다.
           </p>
           {pathPoints.length === 0 ? (
             <div className="chart-empty-box">
-              <p>달별 상태를 그릴 표본이 부족합니다.</p>
+              <p>아직 그릴 만큼 쌓이지 않았습니다.</p>
               <p className="chart-empty-sub">
-                한 달에 3건 이상 쌓이면 변화가, 군집이 생기면 구체화가 계산됩니다.
+                한 달에 3건 이상 쌓이면 가로가, 비슷한 것끼리 무리가 지어지면 세로가 나옵니다.
               </p>
             </div>
           ) : (
             <>
               <Scatter
                 points={pathPoints}
-                xLabel="변화 (drift)"
-                yLabel="구체화 (crystal)"
+                xLabel="변화 → drift"
+                yLabel="또렷함 → crystal"
                 height={320}
                 connect
                 showLabels
-                emptyMessage="달별 상태를 그릴 표본이 부족합니다"
+                emptyMessage="아직 그릴 만큼 쌓이지 않았습니다"
               />
               <MonthStrip timeline={d.timeline} boundaries={boundaries} />
               <p className="panel-foot">
-                {`달 ${d.timeline.length}개 중 ${pathPoints.length}개를 찍었습니다. 나머지는 변화나 구체화가 ${EM_DASH} 입니다.`}
+                {`달 ${d.timeline.length}개 중 ${pathPoints.length}개를 찍었습니다. 나머지 달은 둘 중 하나가 ${EM_DASH}(아직 잴 수 없음)입니다.`}
               </p>
             </>
           )}
+          <Explain items={[TERMS.drift, TERMS.crystal, TERMS.cluster]} />
         </section>
 
         {/* ───────────────────────── 패널 2 */}
         <section className="panel">
-          <h2>2×2 셀 분포</h2>
+          <h2>네 칸에 어떻게 나뉘었나</h2>
           <p className="panel-sub">
-            두 층 모두에 답한 항목만 셉니다. <b>other_reason</b>이 이 시스템이 찾으려는 것입니다.
+            한 항목에 카드 두 장 모두 답하면 그 답의 조합에 따라 네 칸 중 하나에 들어갑니다. 이 앱이
+            특히 찾는 칸은 <b>{CELL_LABELS.other_reason}</b> — 보는 건 같은데 끌린 이유가 달랐던
+            것입니다.
           </p>
           <CellGrid
             cells={d.cells}
@@ -301,34 +327,48 @@ export default function Dashboard({ onOpenArchive }: DashboardProps = {}) {
 
         {/* ───────────────────────── 패널 3 */}
         <section className="panel">
-          <h2>최근 이동 축</h2>
-          <p className="panel-sub">90일 창과 그 직전 90일 창의 차이. 큰 순서로 셋.</p>
+          <h2>요즘 가장 많이 움직인 것</h2>
+          <p className="panel-sub">최근 90일을 그 앞 90일과 견줍니다. 가장 많이 움직인 셋.</p>
           {topBars.length === 0 ? (
             <div className="chart-empty-box">
-              <p>표본 부족</p>
+              <p>아직 견줄 만큼 쌓이지 않았습니다.</p>
             </div>
           ) : (
             <>
               <Bars data={topBars} diverging />
               {nullAxes.length > 0 && (
                 <p className="panel-foot">
-                  {`표본 부족 ${EM_DASH} ${nullAxes.join(" · ")}`}
+                  {`아직 잴 수 없음 ${EM_DASH} ${nullAxes.map((a) => AXIS_LABELS[a as keyof typeof AXIS_LABELS] ?? a).join(" · ")}`}
                 </p>
               )}
             </>
           )}
+          {/*
+            §R11 — 이 문장은 줄이지 않는다 (`ui/README.md` 6). 다만 "프롬프트 경계"가
+            무엇인지 모르면 경고가 경고로 읽히지 않으므로, 그 말을 먼저 푼다.
+          */}
           {boundaries.length > 0 && (
             <p className="panel-warn">
-              {`프롬프트 경계 ${boundaries.length}건. 이 이동의 일부는 취향이 아니라 프롬프트 변경에서 왔을 수 있습니다 (§R11).`}
+              중간에 기계가 쓰는 질문지가 {boundaries.length}번 바뀌었습니다. 이 움직임의 일부는
+              취향이 변한 것이 아니라 <b>질문이 바뀐 탓</b>일 수 있습니다.
+              <Ref>§R11</Ref>
             </p>
           )}
+          <Explain
+            label="축 이름이 무슨 뜻인가요"
+            items={AXES.map((a) => ({
+              name: AXIS_LABELS[a],
+              id: a,
+              gloss: `0 · ${AXIS_POLES[a][0]} ↔ 1 · ${AXIS_POLES[a][1]}`,
+            }))}
+          />
         </section>
       </div>
 
       {onOpenArchive && (
         <div className="dash-more">
           <button type="button" className="btn" onClick={() => onOpenArchive()}>
-            아카이브에서 항목 자체를 보기 →
+            숫자 말고 넣은 것들을 하나씩 보기 →
           </button>
         </div>
       )}

@@ -302,9 +302,16 @@
   stroke: var(--ch-line);
   stroke-width: 1;
 }
+/* 칸 이름은 우리말이 먼저다. 식별자는 그 아래 한 단계 작고 흐리게 남는다. */
+.cg-name {
+  fill: var(--ch-fg);
+  font-size: 11.5px;
+  font-weight: 600;
+}
 .cg-key {
   fill: var(--ch-faint);
-  font-size: 10px;
+  font-size: 8.5px;
+  font-family: var(--mono);
 }
 .cg-count {
   fill: var(--ch-fg);
@@ -333,13 +340,14 @@
   font-size: 10.5px;
 }
 
-.cg-read .cg-key {
+/* 칸 색은 이름에 붙는다. 식별자는 어느 칸이든 똑같이 흐리다. */
+.cg-read .cg-name {
   fill: var(--ch-cell-read);
 }
-.cg-wrong_words .cg-key {
+.cg-wrong_words .cg-name {
   fill: var(--ch-cell-wrong);
 }
-.cg-unread .cg-key {
+.cg-unread .cg-name {
   fill: var(--ch-cell-unread);
 }
 
@@ -349,7 +357,7 @@
   stroke-width: 1.8;
   fill: color-mix(in srgb, var(--ch-cell-other) 9%, transparent);
 }
-.cg-cell.is-emphasis .cg-key,
+.cg-cell.is-emphasis .cg-name,
 .cg-cell.is-emphasis .cg-count {
   fill: var(--ch-cell-other);
 }
@@ -446,6 +454,31 @@
   color: var(--ch-muted);
   font-variant-numeric: tabular-nums;
 }
+/*
+  머리글 한 줄은 그대로 두고(제목 + 숫자), 설명과 접힌 풀이는 아래로 내린다.
+  DOM 순서는 제목 → 설명 → 숫자 → 풀이 그대로다 — 읽어 주는 기계에게는 설명이
+  숫자보다 먼저 와야 하고, 눈으로 보는 사람에게는 숫자가 먼저 붙어 있어야 한다.
+  초점을 받는 것은 맨 끝의 `summary` 하나뿐이라 두 순서가 어긋나도 걸리지 않는다.
+*/
+.dash-head h1 {
+  order: 0;
+}
+.dash-meta {
+  order: 1;
+}
+.dash-lead {
+  order: 2;
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ch-muted);
+}
+.dash-head > .explain {
+  order: 3;
+  flex-basis: 100%;
+  margin-top: 6px;
+}
+
 .dash-note {
   color: var(--ch-muted);
 }

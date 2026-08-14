@@ -249,7 +249,15 @@ export const proposal: ProposalView = {
 } as ProposalView;
 
 export const detail: ItemDetail = {
-  item: items[0]!,
+  /*
+    `cell` 을 덮어쓰는 이유: `items[0]` 은 목록용이라 `cell: "read"`(yes, yes)를 들고
+    있는데, 이 상세는 감각에 `no` 를 답하고 문화는 **미응답**인 상태를 보여 준다.
+    셋을 그대로 두면 화면이 "제대로 읽었다" 옆에 "× 아니다" 를 나란히 놓는다.
+    §12.6 의 2단 조인으로는 나올 수 없는 조합이고, 미리보기가 실제 데이터에서는
+    불가능한 모양을 디자이너에게 보여 주게 된다. 한쪽이 미응답이면 `cell` 은 `null`,
+    즉 "미완성"이다.
+  */
+  item: { ...items[0]!, cell: null },
   origin: "file:///Users/x/사진/2026-03-02.jpg",
   sensory_prose: PROSE[0]!,
   sensory_reading: { verdict: "no", prose: "향수 아니고 오히려 좀 서늘한 거리감", divergence: 0.41 },

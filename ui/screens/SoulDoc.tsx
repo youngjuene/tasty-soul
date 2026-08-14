@@ -9,13 +9,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { errorText, readSoulMd, saveSoulMd } from "../lib/api";
 import type { SaveResult } from "../lib/types";
 import { parseMarkdown, scanSoulBlocks, toLines, type MdNode } from "../lib/md";
+import { Ref } from "../components/Explain";
 import "../styles/doc.css";
 
 function MarkdownView({ src }: { src: string }) {
   const nodes = useMemo<MdNode[]>(() => parseMarkdown(src), [src]);
 
   if (nodes.length === 0) {
-    return <p className="doc-empty">아직 아무것도 없습니다.</p>;
+    return <p className="doc-empty">아직 아무것도 없습니다. 답이 쌓이면 앱이 여기를 채웁니다.</p>;
   }
 
   return (
@@ -210,7 +211,7 @@ export function SoulDoc() {
 
       {confirmDiscard && (
         <div className="doc-confirm" role="alert">
-          <span>저장하지 않은 편집이 있습니다. 버릴까요?</span>
+          <span>저장하지 않은 것이 있습니다. 버릴까요?</span>
           <button type="button" className="doc-btn doc-btn-danger" onClick={discard}>
             버리기
           </button>
@@ -229,13 +230,14 @@ export function SoulDoc() {
       {result !== null && (
         <div className="doc-result" role="status">
           <p>
-            블록 편집 {result.profile_edits}건을 관측으로 기록했습니다 · 커밋 {result.commits}개.
-            <span className="doc-muted"> 저장 한 번에 커밋이 여러 개 생기는 것은 정상입니다.</span>
+            고친 곳 {result.profile_edits}군데를 기록했습니다 · 저장 기록 {result.commits}개.
+            <span className="doc-muted"> 한 번 저장에 기록이 여러 개 생기는 것은 정상입니다.</span>
           </p>
           {result.gen_blocks_modified.length > 0 && (
             <p className="doc-warn">
-              <strong>재빌드 시 덮어써집니다</strong> — 고친 <code className="doc-code">soul:gen</code>{" "}
-              블록: {result.gen_blocks_modified.join(" · ")}
+              <strong>여기 쓴 것은 다음에 다시 만들 때 지워집니다</strong> — 방금 고친 곳이 앱이
+              채우는 자리(<code className="doc-code">soul:gen</code>)였습니다:{" "}
+              {result.gen_blocks_modified.join(" · ")}
             </p>
           )}
         </div>
@@ -244,8 +246,9 @@ export function SoulDoc() {
       {editing ? (
         <>
           <p className="doc-muted doc-legend">
-            회색 영역은 <code className="doc-code">soul:gen</code> 블록입니다. 파생값으로 다시
-            채워지므로 여기에 쓴 것은 재빌드 때 덮어써집니다 (§8.3 규칙 7).
+            <strong>회색으로 덮인 줄은 앱이 채우는 자리입니다.</strong> 쌓인 답에서 다시 계산해
+            채우므로, 거기에 쓴 것은 다음에 다시 만들 때 지워집니다. 남기고 싶은 문장은 회색이
+            아닌 곳에 쓰세요.<Ref>§8.3 규칙 7</Ref>
           </p>
           <div className="doc-edit">
             <div className="doc-edit-backdrop" ref={backdropRef} aria-hidden="true">

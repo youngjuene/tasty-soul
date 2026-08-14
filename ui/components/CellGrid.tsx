@@ -9,7 +9,7 @@
  * 셀 판정은 커맨드가 한다 (§12.6의 2단 조인). 이 컴포넌트는 개수를 놓기만 한다.
  */
 
-import { CELL_MEANINGS, CELLS, EM_DASH } from "../lib/types";
+import { CELL_LABELS, CELL_MEANINGS, CELLS, EM_DASH } from "../lib/types";
 import type { CellCounts, CellName } from "../lib/types";
 
 /** 2×2 셀 식별자 (§12.6). `lib/types.ts` 의 `CellName` 과 같은 값이다. */
@@ -65,8 +65,10 @@ export default function CellGrid({ cells, recent30, observationCount, onSelect }
   if (done === 0) {
     return (
       <div className="chart-empty-box">
-        <p>아직 두 층 모두에 답한 항목이 없습니다.</p>
-        <p className="chart-empty-sub">감각 글귀와 문화 글귀 양쪽에 답하면 이 칸이 채워집니다.</p>
+        <p>아직 두 카드 모두에 답한 항목이 없습니다.</p>
+        <p className="chart-empty-sub">
+          한 항목의 감각 카드와 문화 카드 양쪽에 답하면 그 항목이 이 네 칸 중 하나에 들어갑니다.
+        </p>
       </div>
     );
   }
@@ -133,27 +135,35 @@ export default function CellGrid({ cells, recent30, observationCount, onSelect }
               }
             >
               <rect className="cg-box" x={x + 3} y={y + 3} width={CELL_W - 6} height={CELL_H - 6} rx={4} />
-              <text className="cg-key" x={x + 13} y={y + 21}>
+              {/*
+                우리말 이름이 먼저 읽히고 식별자가 그 아래 작게 남는다. 칸 이름을
+                `other_reason` 하나로 두면 처음 온 사람은 네 칸을 구별하지 못하고,
+                식별자를 지우면 `SOUL.md` 를 열었을 때 같은 칸을 못 알아본다.
+              */}
+              <text className="cg-name" x={x + 13} y={y + 21}>
+                {CELL_LABELS[key]}
+              </text>
+              <text className="cg-key" x={x + 13} y={y + 32}>
                 {key}
               </text>
-              <text className="cg-count" x={x + 13} y={y + 51}>
+              <text className="cg-count" x={x + 13} y={y + 60}>
                 {n}
               </text>
-              <text className={`cg-trend ${t.cls}`} x={x + CELL_W - 15} y={y + 51} textAnchor="end">
+              <text className={`cg-trend ${t.cls}`} x={x + CELL_W - 15} y={y + 60} textAnchor="end">
                 {t.mark}
               </text>
-              <text className="cg-share" x={x + 13} y={y + 70}>
+              <text className="cg-share" x={x + 13} y={y + 76}>
                 {share.toFixed(0)}%
               </text>
-              <title>{`${key} ${EM_DASH} ${CELL_MEANINGS[key]}\n${n}건\n${t.title}`}</title>
+              <title>{`${CELL_LABELS[key]} (${key})\n${CELL_MEANINGS[key]}\n${n}건\n${t.title}`}</title>
             </g>
           );
         })}
 
         <text className="cg-foot" x={GRID_X} y={H - 14}>
           {pending === null
-            ? `두 층 응답 완료 ${done}건`
-            : `두 층 응답 완료 ${done}건 · 미완성 ${pending}건`}
+            ? `둘 다 답함 ${done}건`
+            : `둘 다 답함 ${done}건 · 아직 한쪽만 ${pending}건`}
         </text>
       </svg>
     </div>

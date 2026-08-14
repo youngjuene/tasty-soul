@@ -19,7 +19,18 @@ const handlers: Record<string, (a: Record<string, unknown>) => unknown> = {
     models_unset: false,
     context_enabled: true,
   }),
-  secrets_status: () => [["openai", true], ["search", false], ["youtube", false]],
+  /*
+    계정 이름은 실제 백엔드가 주는 것과 **글자까지 같아야 한다.** `Setup.tsx` 의
+    `ACCOUNT_LABEL` 이 이 문자열을 열쇠로 우리말 이름을 찾으므로, 여기서 `openai` 로
+    줄여 쓰면 미리보기에만 `openai` 라는 날것이 뜨고 진짜 앱에는 «OpenAI API 키» 가
+    뜬다. 디자이너가 보는 화면이 실제보다 나빠진다.
+    (`soul_net::secrets::ACCOUNT_*` · `commands.rs: SECRET_ACCOUNTS`)
+  */
+  secrets_status: () => [
+    ["openai_api_key", true],
+    ["search_api_key", false],
+    ["youtube_api_key", false],
+  ],
   get_config: () => F.config,
   set_config: () => null,
   doctor: () => F.doctorReport,

@@ -377,7 +377,19 @@ export function Ingest({
     <div className="ts-screen">
       <div className="ts-wrap">
         <h1 className="ts-h">투입</h1>
+        {/*
+          이 앱에서 처음 읽히는 두 문장이다. 여기서 못 알아들으면 나머지 화면은
+          열리지도 않는다 — 다른 데는 다 나중에 봐도 되지만 여기는 아니다.
+          그래서 앱이 하는 일 전부를 두 문장으로 적는다. 첫 줄이 규칙이고,
+          둘째 줄이 그 규칙에 나오는 "두 번"이 각각 무엇인지다.
+        */}
         <p className="ts-sub">넣은 것에 대해 두 번 묻는다. 답은 두 개뿐이다.</p>
+        <p className="ts-sub ts-sub--quiet">
+          먼저 <b>기계가 본 것</b>을 한 줄로 적어 보여 주고 맞는지 묻습니다{" "}
+          <span className="ts-null">(감각 글귀)</span>. 잠시 뒤 <b>왜 그것에 끌렸을지</b>를 짐작해
+          보여 주고 그게 이유가 맞는지 묻습니다 <span className="ts-null">(문화 글귀)</span>.
+          모르겠으면 답하지 않고 넘겨도 됩니다.
+        </p>
 
         <div
           className={
@@ -458,7 +470,7 @@ export function Ingest({
                     </div>
                     {now - job.startedAt > 8000 && (
                       <p className="ts-job__wait">
-                        내려받기가 필요한 항목은 20~60초 걸립니다. 그대로 두면 됩니다.
+                        내려받아야 하는 것은 20~60초쯤 걸립니다. 그대로 두고 다른 걸 해도 됩니다.
                       </p>
                     )}
                   </>
@@ -476,7 +488,7 @@ export function Ingest({
         {showCultural && (
           <div className="ts-pending">
             <span>
-              문화 글귀 대기{" "}
+              답을 기다리는 문화 글귀{" "}
               {pending === null ? <span className="ts-null">{EM_DASH}</span> : `${pending}건`}
             </span>
             <button

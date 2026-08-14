@@ -1,0 +1,96 @@
+/* ==========================================================================
+   explain.css — 접어 둔 설명과, 우리말 이름 옆에 남는 식별자
+
+   화면에 있는 낯선 말을 그 자리에서 푼다. **닫혀 있을 때가 기본 상태다** —
+   접힌 줄 하나가 본문보다 눈에 띄면 설명하려던 화면을 설명이 덮는다.
+
+   `base.css` 의 토큰만 쓴다. 문서 화면(`doc.css`)과 차트 화면(`charts.css`)
+   양쪽에서 같이 쓰이므로 어느 한쪽 변수에 기대면 안 된다.
+   ========================================================================== */
+
+.explain {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.explain-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 0;
+  color: var(--fg-mute);
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur);
+}
+
+.explain-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 삼각형은 직접 그린다. 브라우저 기본 마커는 위치와 크기가 제각각이다. */
+.explain-summary::before {
+  content: "›";
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform var(--dur);
+}
+
+.explain[open] > .explain-summary::before {
+  transform: rotate(90deg);
+}
+
+.explain-summary:hover,
+.explain[open] > .explain-summary {
+  color: var(--fg-dim);
+}
+
+.explain-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.explain-list {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-left: 2px solid var(--line);
+  background: var(--bg-sunk);
+  border-radius: var(--radius-sm);
+}
+
+.explain-row + .explain-row {
+  margin-top: var(--space-3);
+}
+
+.explain-term {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.explain-gloss {
+  margin: 2px 0 0;
+  color: var(--fg-dim);
+  line-height: var(--leading);
+}
+
+/* 같은 값이 문서에서 다른 낱말로 적힐 때의 다리. 뜻풀이보다 한 단계 흐리다. */
+.explain-doc {
+  display: block;
+  margin-top: 2px;
+  color: var(--fg-mute);
+  font-size: var(--text-xs);
+}
+
+/* `.ident` 와 `.ref` 는 `base.css` 에 있다 — Explain 을 쓰지 않는 화면도 쓴다. */
+.explain-id {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  color: var(--fg-mute);
+  white-space: nowrap;
+}

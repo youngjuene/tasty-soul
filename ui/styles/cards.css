@@ -83,6 +83,17 @@
   font-size: 12.5px;
 }
 
+/*
+  규칙 아래 붙는 풀이. 규칙보다 흐리고 줄 간격이 넓다 — 한 번 읽고 나면
+  다시 볼 일이 없는 문장이라, 매번 눈에 걸리면 안 된다.
+*/
+.ts-sub--quiet {
+  margin-top: 6px;
+  max-width: 62ch;
+  line-height: 1.7;
+  opacity: 0.85;
+}
+
 .ts-muted {
   color: var(--ts-dim);
 }

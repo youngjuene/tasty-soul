@@ -475,6 +475,158 @@ export const AXIS_POLES: Record<AxisName, [low: string, high: string]> = {
   intensity: ["은은하고 조용함", "강렬하고 압도적임"],
 };
 
+// ──────────────────────────────────────── 읽히는 이름 (§13 — 표시 전용)
+
+/*
+ * 화면에 **먼저** 나오는 우리말 이름. 식별자를 대체하지 않고 그 앞에 선다.
+ *
+ * `other_reason` · `surprisal` · `grain` 은 지울 수 없는 이름이다 — `SOUL.md` 와
+ * MCP 와 CLI 가 그 이름으로 말하므로, 화면에서 없애 버리면 앱에서 그쪽으로 넘어가는
+ * 순간 말이 끊긴다. 그렇다고 처음 열어 본 사람에게 `other_reason` 을 먼저 들이밀면
+ * 그 사람은 아무것도 읽지 못한다.
+ *
+ * 그래서 **우리말을 앞에 놓고 식별자를 옆에 작게 남긴다.** 처음에는 우리말만 읽히고,
+ * 오래 쓰면 옆에 있던 식별자가 저절로 눈에 익는다. 그때쯤 `SOUL.md` 를 열어도
+ * 낯설지 않다.
+ *
+ * 뜻 전문은 각 화면의 `Explain` 이 접어서 들고 있다. 여기 있는 것은 **이름뿐**이다.
+ */
+
+/** 2×2 셀의 짧은 이름. 명세의 뜻 문장은 `CELL_MEANINGS` 에 그대로 있다 (§12.6). */
+export const CELL_LABELS: Record<CellName, string> = {
+  read: "제대로 읽었다",
+  other_reason: "이유가 다르다",
+  wrong_words: "말만 빗나갔다",
+  unread: "아직 못 잡았다",
+};
+
+/** 8축의 우리말 이름. 양극의 뜻은 `AXIS_POLES` (§7 표 문구 그대로). */
+export const AXIS_LABELS: Record<AxisName, string> = {
+  chroma: "색감",
+  luminance: "밝기",
+  density: "밀도",
+  grain: "거칠기",
+  tempo: "빠르기",
+  space: "공간감",
+  valence: "편안함",
+  intensity: "강렬함",
+};
+
+/** §6.2 `Kind`. */
+export const KIND_LABELS: Record<Kind, string> = {
+  text: "텍스트",
+  image: "이미지",
+  audio: "음악",
+  video: "영상",
+};
+
+/** §6.2 `Quality` — **모델이 아니라 파이프라인이 정한다.** */
+export const QUALITY_LABELS: Record<Quality, string> = {
+  full: "온전히 봄",
+  partial: "일부만 봄",
+  minimal: "겉만 봄",
+};
+
+export const QUALITY_MEANINGS: Record<Quality, string> = {
+  full: "볼 수 있는 것을 다 보고 서술했습니다.",
+  partial: "일부만 보고 서술했습니다 — 예를 들어 영상의 앞 30초.",
+  minimal: "제목과 썸네일 정도만 보고 서술했습니다.",
+};
+
+/** 모르는 값이 와도 화면이 비지 않게 원래 값을 그대로 돌려준다. */
+export function kindLabel(v: string): string {
+  return KIND_LABELS[v as Kind] ?? v;
+}
+export function qualityLabel(v: string): string {
+  return QUALITY_LABELS[v as Quality] ?? v;
+}
+export function axisLabel(v: string): string {
+  return AXIS_LABELS[v as AxisName] ?? v;
+}
+/** `null` 은 §12.6 의 다섯 번째 값(미완성)이다. */
+export function cellLabel(v: string | null): string {
+  if (v === null) return CELL_INCOMPLETE_LABEL;
+  return CELL_LABELS[v as CellName] ?? v;
+}
+
+/**
+ * 화면에 숫자로 나오는 말들의 뜻. **한 줄로 적는다** — 길면 아무도 읽지 않는다.
+ *
+ * `id` 는 같은 값이 `SOUL.md` · MCP · CLI 에서 불리는 이름이다. 설명을 펼친
+ * 사람에게만 보이면 된다.
+ */
+export interface TermDef {
+  name: string;
+  id: string;
+  gloss: string;
+  /**
+   * `SOUL.md` 가 같은 값을 **다른 우리말로** 부를 때 그 이름.
+   *
+   * 문서의 낱말은 §8.2 템플릿이라 고칠 수 없다 — T1(바이트 동일성)이 거기 걸려 있다.
+   * 그렇다고 화면까지 `해상도` 로 두면 처음 온 사람은 화면 해상도를 떠올린다.
+   * 그래서 **화면은 읽히는 말로 부르고, 두 이름을 여기서 이어 준다.** 이 다리가
+   * 없으면 대시보드에서 익힌 말이 `SOUL.md` 에서 사라진 것처럼 보인다.
+   */
+  doc?: string;
+}
+
+export const TERMS = {
+  surprisal: {
+    name: "새로움",
+    id: "surprisal",
+    gloss: "이미 쌓인 것들과 얼마나 다른가. 1에 가까울수록 처음 보는 쪽입니다.",
+  },
+  cluster: {
+    name: "무리",
+    id: "cluster",
+    gloss: "비슷한 것끼리 자동으로 묶은 덩어리. 번호에 순서나 좋고 나쁨은 없습니다.",
+  },
+  drift: {
+    name: "변화",
+    id: "drift",
+    gloss: "지난달과 견줘 취향이 얼마나 움직였는가. 클수록 많이 움직였습니다.",
+  },
+  crystal: {
+    name: "또렷함",
+    id: "crystal",
+    gloss: "비슷한 것끼리 얼마나 뚜렷하게 갈라지는가. 클수록 윤곽이 분명합니다.",
+    doc: "해상도",
+  },
+  misread: {
+    name: "어긋남",
+    id: "misread_ratio",
+    gloss: "기계의 서술을 '아니다'로 되돌린 비율입니다. 높다고 나쁜 것은 아닙니다.",
+  },
+  tRef: {
+    name: "기준일",
+    id: "T_ref",
+    gloss: "모든 계산이 이 날을 기준으로 돕니다. 가장 마지막 기록의 날짜입니다.",
+    doc: "기준",
+  },
+  count: {
+    name: "넣은 것",
+    id: "observation_count",
+    gloss: "지금 세고 있는 항목 수. 다시 읽힌 항목은 새것 하나로만 셉니다.",
+    doc: "관측",
+  },
+  first: {
+    name: "시작",
+    id: "t_first",
+    gloss: "가장 처음 기록한 날짜입니다.",
+    doc: "최초",
+  },
+  quality: {
+    name: "기록 품질",
+    id: "quality",
+    gloss: "그 항목을 얼마나 들여다보고 서술했는지. 모델이 아니라 처리 과정이 정합니다.",
+  },
+  structure: {
+    name: "구조 보기",
+    id: "PCA",
+    gloss: "비슷한 것끼리 가까이 모이도록 자동 배치합니다. 가로·세로 축 자체에는 뜻이 없습니다.",
+  },
+} as const satisfies Record<string, TermDef>;
+
 /** §13 화면 6 — 산점도 기본 축 조합. */
 export const DEFAULT_X_AXIS: AxisName = "grain";
 export const DEFAULT_Y_AXIS: AxisName = "valence";
@@ -518,6 +670,22 @@ export function dashSigned(v: number | null | undefined, digits = 2): string {
   const r = roundForDisplay(v, digits);
   // 0으로 반올림되면 부호는 의미가 없다. `−0.00` 을 내지 않는다.
   return (r < 0 ? "−" : "+") + Math.abs(r).toFixed(digits);
+}
+
+/**
+ * 받침에 따라 조사를 고른다. `해상도라고` / `기준이라고`.
+ *
+ * 한글 음절은 `0xAC00` 부터 28개씩 묶여 있고, 그 안에서의 자리(`% 28`)가 종성이다.
+ * 0이면 받침이 없다. 문자열을 붙여 만드는 문구는 이걸 안 하면 전부 `이라고` 로
+ * 나가고, **그 순간 기계가 쓴 문장처럼 읽힌다.**
+ *
+ * 한글이 아닌 글자(영문 식별자 등)로 끝나면 받침 없는 쪽으로 둔다.
+ */
+export function josa(word: string, withBatchim: string, withoutBatchim: string): string {
+  const last = word.trim().slice(-1);
+  const code = last.charCodeAt(0);
+  if (Number.isNaN(code) || code < 0xac00 || code > 0xd7a3) return withoutBatchim;
+  return (code - 0xac00) % 28 === 0 ? withoutBatchim : withBatchim;
 }
 
 /** 문자열을 렌더한다. 비었거나 `null` 이면 `—`. */

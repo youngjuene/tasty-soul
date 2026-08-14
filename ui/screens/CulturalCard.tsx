@@ -198,7 +198,7 @@ export function CulturalCardView({ card, onAnswered }: CulturalCardViewProps) {
               className="ts-input"
               type="text"
               value={prose}
-              placeholder="그럼 무엇 때문인지 한 줄로 (비워도 됩니다)"
+              placeholder="그럼 무엇 때문인지 한 줄로 — 비워도 됩니다"
               onChange={(e) => setProse(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void confirmNo();
@@ -274,7 +274,7 @@ export function CulturalCardDeck({ onChange }: CulturalCardDeckProps = {}) {
     <>
       <div className="ts-deck__head">
         <span className="ts-muted">
-          {loading ? "불러오는 중" : `대기 ${cards.length}건`}
+          {loading ? "불러오는 중" : `답할 것 ${cards.length}장`}
         </span>
         <div className="ts-deck__nav">
           <button
@@ -313,7 +313,7 @@ export function CulturalCardDeck({ onChange }: CulturalCardDeckProps = {}) {
       ) : (
         !loading && (
           <p className="ts-empty">
-            대기 중인 문화 글귀가 없습니다. 투입하면 20~60초 뒤에 도착합니다.
+            지금은 답할 것이 없습니다. 무언가 넣으면 20~60초 뒤에 여기 도착합니다.
           </p>
         )
       )}
@@ -328,6 +328,11 @@ export function CulturalCard() {
       <div className="ts-wrap">
         <h1 className="ts-h">문화 글귀</h1>
         <p className="ts-sub">이것 때문에 좋은지 묻는다. 답하지 않은 카드는 여기 남는다.</p>
+        <p className="ts-sub ts-sub--quiet">
+          기계가 <b>왜 끌렸을지</b>를 짐작해 적은 글입니다. 짐작이 맞으면 «그래서 좋다», 이유가
+          그게 아니면 «그것 때문은 아니다». <b>둘째 쪽이 이 앱에 더 쓸모 있습니다</b> — 보는 건
+          같은데 이유가 다른 지점이 취향이 갈리는 자리라서요.
+        </p>
         <CulturalCardDeck />
       </div>
     </div>

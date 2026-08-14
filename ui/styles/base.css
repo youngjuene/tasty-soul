@@ -944,3 +944,34 @@ h3 {
   word-break: break-word;
   overflow-x: auto;
 }
+
+/* ─────────────────────────────── 우리말 이름 옆에 남는 식별자
+
+   `SOUL.md` · MCP · CLI 가 쓰는 이름이다. 앱 안에서만 살 사람에게는 장식이지만,
+   밖으로 나갈 사람에게는 그것이 손잡이다. 그래서 **지우지 않고 줄인다.** */
+
+.ident {
+  margin-left: 0.4em;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--fg-mute);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────── 명세 참조
+
+   `(§9.7)` 같은 표시는 남긴다 — 이 앱의 모든 동작에는 근거가 있고, 그것을
+   확인할 수 있어야 한다. 다만 **문장의 일부로 읽히면 안 된다.** 처음 온
+   사람에게 §R11 은 뜻 없는 잡음이고, 잡음이 문장 한가운데 있으면 문장이 끊긴다. */
+
+.ref {
+  font-size: 0.85em;
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+
+.ref::before {
+  content: " ";
+}

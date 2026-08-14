@@ -15,7 +15,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { approveProposal, errorText, reflect, rejectProposal } from "../lib/api";
-import { dashSigned, type ProposalView } from "../lib/types";
+import { axisLabel, dashSigned, type ProposalView } from "../lib/types";
+import { Ref } from "../components/Explain";
 import { diffLines, diffStat, sideBySide, splitLines } from "../lib/diff";
 import "../styles/doc.css";
 
@@ -79,7 +80,7 @@ export function ApproveDiff() {
       await rejectProposal();
       setProposal(null);
       setModifying(false);
-      setDone("거절했습니다. 이 제안은 기록되지 않습니다.");
+      setDone("거절했습니다. 이 제안은 어디에도 남지 않습니다.");
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -100,11 +101,20 @@ export function ApproveDiff() {
           </button>
         </div>
       </header>
+      {/*
+        무엇이 전송되는지는 줄이지 않는다 (`ui/README.md` 6). 다만 "성찰"이 무엇인지
+        모르는 채로 그 경고만 읽으면 무엇을 승인하는지 모르고 누르게 된다.
+      */}
+      <p className="doc-lead">
+        그동안 쌓인 답을 앱이 훑어보고 <code className="doc-code">SOUL.md</code> 를 이렇게 고치자고
+        제안하는 자리입니다. <strong>승인해야만 반영됩니다.</strong> 거절하면 아무것도 남지
+        않습니다.
+      </p>
       <p className="doc-muted doc-legend">
-        <strong>지금 성찰 실행</strong>은 모델을 호출합니다 —{" "}
+        <strong>지금 성찰 실행</strong>을 누르면 바깥 모델을 부릅니다 —{" "}
         <code className="doc-code">soul:gen</code> · <code className="doc-code">soul:neg</code>{" "}
-        블록이 전송됩니다 (§D2). <code className="doc-code">soul:human</code>은 나가지 않습니다
-        (§D4).
+        블록이 전송됩니다<Ref>§D2</Ref>. 직접 쓴{" "}
+        <code className="doc-code">soul:human</code> 블록은 나가지 않습니다<Ref>§D4</Ref>.
       </p>
 
       {error !== null && (
@@ -122,19 +132,19 @@ export function ApproveDiff() {
       {loading ? (
         <p className="doc-empty">확인 중…</p>
       ) : proposal === null ? (
-        done === null && <p className="doc-empty">지금은 대기 중인 제안이 없습니다.</p>
+        done === null && <p className="doc-empty">지금은 제안이 없습니다. 답이 더 쌓이면 앱이 알아서 만듭니다.</p>
       ) : (
         <>
           <div className="doc-panel">
-            <h2 className="doc-h2">이유</h2>
+            <h2 className="doc-h2">왜 이렇게 고치자는가</h2>
             <p className="doc-md-p">{proposal.rationale}</p>
           </div>
 
           <div className="doc-panel-row">
             <div className="doc-panel">
-              <h2 className="doc-h2">축 변화</h2>
+              <h2 className="doc-h2">움직인 축</h2>
               {Object.keys(proposal.axis_delta).length === 0 ? (
-                <p className="doc-muted">축 변화 없음</p>
+                <p className="doc-muted">움직인 축 없음</p>
               ) : (
                 <table className="doc-table doc-table-axis">
                   <thead>
@@ -147,7 +157,8 @@ export function ApproveDiff() {
                     {Object.entries(proposal.axis_delta).map(([axis, v]) => (
                       <tr key={axis}>
                         <td>
-                          <code className="doc-code">{axis}</code>
+                          {axisLabel(axis)}
+                          <code className="ident">{axis}</code>
                         </td>
                         <td className="doc-num">{dashSigned(v)}</td>
                       </tr>
@@ -158,17 +169,29 @@ export function ApproveDiff() {
             </div>
 
             <div className="doc-panel">
-              <h2 className="doc-h2">근거 {proposal.cites.length}건</h2>
+              <h2 className="doc-h2">근거로 든 항목 {proposal.cites.length}건</h2>
               {proposal.cites.length === 0 ? (
                 <p className="doc-muted">—</p>
               ) : (
-                <ul className="doc-cites">
-                  {proposal.cites.map((c) => (
-                    <li key={c}>
-                      <code className="doc-code">{c}</code>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  {/*
+                    맨 ULID 만 늘어놓으면 무엇을 보고 있는지 알 수 없다.
+                    "아카이브 검색창에 붙여 넣으라"고 쓰고 싶었지만 **그건 거짓말이다** —
+                    `commands.rs: search_corpus` 는 서술문·태그·비평문·정정문만 훑고
+                    id 는 열쇠로만 쓴다. 없는 길을 안내하느니 무엇인지만 말한다.
+                  */}
+                  <p className="doc-muted doc-legend">
+                    이 제안이 근거로 삼은 항목마다 붙은 고유 번호입니다. 같은 번호가{" "}
+                    <code className="doc-code">SOUL.md</code> 와 MCP 에도 그대로 나옵니다.
+                  </p>
+                  <ul className="doc-cites">
+                    {proposal.cites.map((c) => (
+                      <li key={c}>
+                        <code className="doc-code">{c}</code>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
             </div>
           </div>
@@ -179,8 +202,8 @@ export function ApproveDiff() {
             </h2>
             <div className="doc-diffwrap">
               <div className="doc-diff-head">
-                <div>현재</div>
-                <div>제안</div>
+                <div>지금</div>
+                <div>이렇게 하자</div>
               </div>
               <div className="doc-diff-body">
                 {rows.map((r, i) => (
@@ -218,15 +241,25 @@ export function ApproveDiff() {
           {modifying && (
             <div className="doc-panel">
               <h2 className="doc-h2">
-                수정 <code className="doc-code">soul:neg id=profile</code>
+                고쳐서 승인하기
+                <code className="ident">soul:neg id=profile</code>
               </h2>
-              <p className="doc-muted doc-legend">
-                여기서 고친 내용이 그대로 기록됩니다. 제안 원문은 남지 않습니다. 편집 대상은{" "}
-                <code className="doc-code">profile</code> 블록 본문뿐입니다 — 문서의 다른 부분은
-                여기서 고칠 수 없습니다. <code className="doc-code">soul:gen</code>은 재빌드가
-                덮어쓰고(§8.1), <code className="doc-code">soul:human</code>은 관측에 기록되지도
-                원격으로 나가지도 않습니다 (§D4). 한국어 3~6문장이어야 합니다 (§11.2).
+              <p className="doc-lead">
+                여기 적은 대로 기록됩니다. <strong>앱이 제안한 원래 문장은 남지 않습니다.</strong>
               </p>
+              <ul className="doc-notes">
+                <li>
+                  고칠 수 있는 것은 <code className="doc-code">profile</code> 한 덩어리뿐입니다.
+                  문서의 다른 부분은 여기서 건드릴 수 없습니다.
+                </li>
+                <li>한국어 3~6문장으로 씁니다.<Ref>§11.2</Ref></li>
+                <li>
+                  회색으로 표시되는 <code className="doc-code">soul:gen</code> 은 다시 만들 때마다
+                  덮어써지고<Ref>§8.1</Ref>, 직접 쓴{" "}
+                  <code className="doc-code">soul:human</code> 은 기록에도 남지 않고 밖으로도 나가지
+                  않습니다.<Ref>§D4</Ref>
+                </li>
+              </ul>
               <textarea
                 className="doc-textarea"
                 value={modified}

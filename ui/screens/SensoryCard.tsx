@@ -180,7 +180,7 @@ export function SensoryCard({
           type="button"
           className="ts-card__dismiss"
           onClick={onDismiss}
-          title="넘기기 — 관측을 만들지 않습니다"
+          title="넘기기 — 답하지 않고 넘어갑니다. 아무것도 기록되지 않습니다."
           aria-label="넘기기"
         >
           ×
@@ -210,8 +210,8 @@ export function SensoryCard({
       {discardCount !== null && (
         <div className="ts-confirm" role="alertdialog" aria-label="kind 뒤집기 확인">
           <p className="ts-confirm__text">
-            {kindLabel(flipped(current.kind))}으로 다시 읽으면 서술이 새로 만들어집니다. 이미
-            기록한 응답 {discardCount}건은 이월되지 않습니다.
+            {kindLabel(flipped(current.kind))}으로 다시 읽으면 기계가 서술을 새로 씁니다. 여기에
+            이미 답한 {discardCount}건은 함께 넘어가지 않습니다.
           </p>
           <div className="ts-confirm__row">
             <button
@@ -220,7 +220,7 @@ export function SensoryCard({
               onClick={doRecast}
               disabled={recasting}
             >
-              뒤집기
+              다시 읽기
             </button>
             <button
               type="button"
@@ -268,7 +268,7 @@ export function SensoryCard({
               className="ts-input"
               type="text"
               value={prose}
-              placeholder="그럼 무엇으로 보이는지 한 줄로 (비워도 됩니다)"
+              placeholder="그럼 무엇으로 보이는지 한 줄로 — 비워도 됩니다"
               onChange={(e) => setProse(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void confirmNo();
@@ -292,7 +292,7 @@ export function SensoryCard({
 
       {showContextPending && (
         <div className="ts-card__foot">
-          <span>문화 글귀 준비 중</span>
+          <span>이것에 왜 끌렸을지도 곧 물어봅니다 · 준비 중</span>
         </div>
       )}
     </section>

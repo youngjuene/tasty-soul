@@ -29,17 +29,26 @@ import {
 } from "../lib/api";
 import {
   AXES,
+  AXIS_LABELS,
+  AXIS_POLES,
+  axisLabel,
   CELL_INCOMPLETE_LABEL,
+  CELL_LABELS,
   CELL_MEANINGS,
+  cellLabel,
   CELLS,
   DEFAULT_X_AXIS,
   DEFAULT_Y_AXIS,
   dash,
   EM_DASH,
   emptyArchiveQuery,
+  kindLabel,
   KINDS,
   NOT_GROUNDED_NOTICE,
   QUALITIES,
+  QUALITY_MEANINGS,
+  qualityLabel,
+  TERMS,
   TILE_PROSE_CHARS,
   TILE_RENDER_LIMIT,
   VERDICT_LABELS,
@@ -56,6 +65,7 @@ import type {
 } from "../lib/types";
 import Scatter from "../components/Scatter";
 import type { ScatterMode, ScatterPoint } from "../components/Scatter";
+import Explain from "../components/Explain";
 import "../styles/charts.css";
 
 /**
@@ -67,19 +77,25 @@ import "../styles/charts.css";
  */
 const CELL_INCOMPLETE = "incomplete";
 
+const INCOMPLETE_TITLE = "카드 두 장 중 한쪽에 아직 답하지 않았거나, 문화 글귀가 없습니다";
+
 const CELL_FACETS: { key: string; label: string; title: string }[] = [
-  ...CELLS.map((c) => ({ key: c as string, label: c as string, title: `${c} · ${CELL_MEANINGS[c]}` })),
+  ...CELLS.map((c) => ({
+    key: c as string,
+    label: CELL_LABELS[c],
+    title: `${CELL_LABELS[c]} (${c})\n${CELL_MEANINGS[c]}`,
+  })),
   {
     key: CELL_INCOMPLETE,
     label: CELL_INCOMPLETE_LABEL,
-    title: "두 층 중 한쪽에 아직 답하지 않았거나 문화 글귀가 없습니다",
+    title: INCOMPLETE_TITLE,
   },
 ];
 
 function cellTitle(cell: string | null): string {
-  if (cell === null) return "두 층 중 한쪽에 아직 답하지 않았거나 문화 글귀가 없습니다";
+  if (cell === null) return INCOMPLETE_TITLE;
   const meaning = CELL_MEANINGS[cell as CellName];
-  return meaning ? `${cell} · ${meaning}` : cell;
+  return meaning ? `${cellLabel(cell)} (${cell})\n${meaning}` : cell;
 }
 
 function colorForCell(group: string | undefined): string {
@@ -302,10 +318,10 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
       {/* ────────────────────────────── 패싯 */}
       <aside className="arc-facets">
         <div className="facet-head">
-          <h2>패싯</h2>
+          <h2>좁히기</h2>
           {facetCount > 0 && (
             <button type="button" className="btn btn-quiet" onClick={resetFacets}>
-              {`비우기 (${facetCount})`}
+              {`모두 풀기 (${facetCount})`}
             </button>
           )}
         </div>
@@ -315,24 +331,24 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
           <input
             type="search"
             value={search}
-            placeholder="서술문 · 비평문 · 정정문 · 태그"
+            placeholder="기계의 서술 · 문화 글귀 · 내가 쓴 정정 · 태그"
             onChange={(e) => setSearch(e.target.value)}
           />
-          <span className="facet-note">부분 문자열 일치만 합니다.</span>
+          <span className="facet-note">글자가 그대로 들어 있는 것만 찾습니다.</span>
         </label>
 
         <fieldset className="facet">
-          <legend>kind</legend>
+          <legend>종류</legend>
           {KINDS.map((k) => (
-            <label key={k}>
+            <label key={k} title={k}>
               <input type="checkbox" checked={kinds.includes(k)} onChange={() => setKinds(toggle(kinds, k))} />
-              {k}
+              {kindLabel(k)}
             </label>
           ))}
         </fieldset>
 
         <fieldset className="facet">
-          <legend>2×2 셀</legend>
+          <legend>카드 두 장의 답</legend>
           {CELL_FACETS.map((c) => (
             <label key={c.key} title={c.title}>
               <input
@@ -347,18 +363,19 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
         </fieldset>
 
         <fieldset className="facet">
-          <legend>군집</legend>
+          <legend>무리</legend>
           {facetClusters.length === 0 ? (
-            <p className="facet-note">{`군집 ${EM_DASH}`}</p>
+            <p className="facet-note">{`아직 무리가 지어지지 않았습니다 ${EM_DASH}`}</p>
           ) : (
             <select
               value={cluster === null ? "" : String(cluster)}
               onChange={(e) => setCluster(e.target.value === "" ? null : Number(e.target.value))}
+              title={TERMS.cluster.gloss}
             >
               <option value="">전체</option>
               {facetClusters.map((c) => (
                 <option key={c} value={String(c)}>
-                  {`군집 ${c}`}
+                  {`${c}번 무리`}
                 </option>
               ))}
             </select>
@@ -366,7 +383,7 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
         </fieldset>
 
         <fieldset className="facet">
-          <legend>surprisal</legend>
+          <legend>새로움</legend>
           <div className="facet-range">
             <input
               type="range"
@@ -375,7 +392,7 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
               step={0.05}
               value={sMin}
               onChange={(e) => setSMin(Math.min(Number(e.target.value), sMax))}
-              aria-label="surprisal 하한"
+              aria-label="새로움 하한"
             />
             <input
               type="range"
@@ -384,10 +401,12 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
               step={0.05}
               value={sMax}
               onChange={(e) => setSMax(Math.max(Number(e.target.value), sMin))}
-              aria-label="surprisal 상한"
+              aria-label="새로움 상한"
             />
           </div>
-          <p className="facet-note">{`${sMin.toFixed(2)} – ${sMax.toFixed(2)}`}</p>
+          <p className="facet-note">
+            {`${sMin.toFixed(2)} – ${sMax.toFixed(2)} · 1에 가까울수록 처음 보는 것`}
+          </p>
         </fieldset>
 
         <fieldset className="facet">
@@ -434,18 +453,37 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
         </fieldset>
 
         <fieldset className="facet">
-          <legend>quality</legend>
+          <legend>얼마나 보고 썼나</legend>
           {QUALITIES.map((q) => (
-            <label key={q}>
+            <label key={q} title={`${q} · ${QUALITY_MEANINGS[q]}`}>
               <input
                 type="checkbox"
                 checked={qualities.includes(q)}
                 onChange={() => setQualities(toggle(qualities, q))}
               />
-              {q}
+              {qualityLabel(q)}
             </label>
           ))}
         </fieldset>
+
+        {/*
+          좁히는 칸의 말들을 여기서 한 번에 푼다. 패널마다 흩어 놓으면 좁은
+          사이드바가 설명으로 두 배가 된다.
+        */}
+        <Explain
+          label="여기 말들이 무슨 뜻인가요"
+          items={[
+            TERMS.surprisal,
+            TERMS.cluster,
+            TERMS.quality,
+            ...CELLS.map((c) => ({
+              name: CELL_LABELS[c],
+              id: c as string,
+              gloss: CELL_MEANINGS[c],
+            })),
+            { name: CELL_INCOMPLETE_LABEL, id: "cell = null", gloss: INCOMPLETE_TITLE },
+          ]}
+        />
       </aside>
 
       {/* ────────────────────────────── 공간 */}
@@ -463,7 +501,7 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
               type="button"
               className={view === "structure" ? "seg is-on" : "seg"}
               onClick={() => setView("structure")}
-              title="임베딩을 PCA로 2차원에 투영한 좌표. 축의 뜻은 설명할 수 없습니다."
+              title={TERMS.structure.gloss}
             >
               구조 보기
             </button>
@@ -475,8 +513,8 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
                 가로
                 <select value={xAxis} onChange={(e) => setXAxis(e.target.value as AxisName)}>
                   {AXES.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
+                    <option key={a} value={a} title={`${AXIS_LABELS[a]} (${a})\n0 · ${AXIS_POLES[a][0]}\n1 · ${AXIS_POLES[a][1]}`}>
+                      {AXIS_LABELS[a]}
                     </option>
                   ))}
                 </select>
@@ -485,8 +523,8 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
                 세로
                 <select value={yAxis} onChange={(e) => setYAxis(e.target.value as AxisName)}>
                   {AXES.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
+                    <option key={a} value={a} title={`${AXIS_LABELS[a]} (${a})\n0 · ${AXIS_POLES[a][0]}\n1 · ${AXIS_POLES[a][1]}`}>
+                      {AXIS_LABELS[a]}
                     </option>
                   ))}
                 </select>
@@ -499,23 +537,26 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
               <span className="arc-busy">읽는 중…</span>
             ) : (
               <span>
-                {`${items.length}건 · 보이는 것 ${visible.n}건 · ${visible.mode === "tile" ? "타일" : "점"}`}
+                {`${items.length}건 중 화면에 ${visible.n}건`}
               </span>
             )}
           </div>
         </header>
 
         {visible.mode === "dot" && (
-          <p className="arc-hint">{`${TILE_RENDER_LIMIT}건을 넘어 점으로 그립니다. 확대하면 타일로 바뀝니다.`}</p>
+          <p className="arc-hint">{`한 화면에 ${TILE_RENDER_LIMIT}건이 넘어 점으로 그립니다. 확대하면 그림으로 바뀝니다.`}</p>
         )}
         {view === "structure" && structureDropped > 0 && (
-          <p className="arc-hint">{`구조 좌표가 ${EM_DASH} 인 ${structureDropped}건은 이 보기에서 빠졌습니다.`}</p>
+          <p className="arc-hint">{`자리를 정할 수 없는 ${structureDropped}건은 이 보기에서 빠졌습니다.`}</p>
+        )}
+        {view === "structure" && (
+          <p className="arc-hint">{TERMS.structure.gloss}</p>
         )}
 
         <Scatter
           points={points}
-          xLabel={view === "structure" ? "PC1" : xAxis}
-          yLabel={view === "structure" ? "PC2" : yAxis}
+          xLabel={view === "structure" ? "PC1" : axisLabel(xAxis)}
+          yLabel={view === "structure" ? "PC2" : axisLabel(yAxis)}
           height={520}
           interactive
           colorOf={colorForCell}
@@ -541,7 +582,9 @@ export default function Archive({ initialCell }: ArchiveProps = {}) {
       {/* ────────────────────────────── 상세 */}
       <aside className="arc-detail">
         {selectedId === null ? (
-          <p className="arc-placeholder">항목을 고르면 두 글귀를 나란히 봅니다.</p>
+          <p className="arc-placeholder">
+            점을 하나 고르면 기계가 쓴 두 글귀와 그때 내가 뭐라고 답했는지가 나란히 나옵니다.
+          </p>
         ) : (
           <ItemDetailPanel
             key={selectedId}
@@ -666,7 +709,7 @@ function ItemDetailPanel({
           )}
         </div>
         <div className="detail-origin">
-          <p className="detail-kind">{it.kind}</p>
+          <p className="detail-kind">{kindLabel(it.kind)}</p>
           <p className="detail-origin-text" title={detail.origin}>
             {detail.origin}
           </p>
@@ -677,23 +720,23 @@ function ItemDetailPanel({
       </header>
 
       <dl className="detail-facts">
-        <div>
-          <dt>surprisal</dt>
+        <div title={TERMS.surprisal.gloss}>
+          <dt>{TERMS.surprisal.name}</dt>
           <dd>{dash(it.surprisal)}</dd>
         </div>
-        <div>
-          <dt>군집</dt>
-          <dd>{it.cluster === null || it.cluster === undefined ? EM_DASH : it.cluster}</dd>
-        </div>
-        <div>
-          <dt>quality</dt>
-          <dd>{it.quality}</dd>
-        </div>
-        <div>
-          <dt>2×2 셀</dt>
-          <dd title={cellTitle(it.cell)}>
-            {it.cell ?? EM_DASH}
+        <div title={TERMS.cluster.gloss}>
+          <dt>{TERMS.cluster.name}</dt>
+          <dd>
+            {it.cluster === null || it.cluster === undefined ? EM_DASH : `${it.cluster}번`}
           </dd>
+        </div>
+        <div title={QUALITY_MEANINGS[it.quality as keyof typeof QUALITY_MEANINGS] ?? it.quality}>
+          <dt>{TERMS.quality.name}</dt>
+          <dd>{qualityLabel(it.quality)}</dd>
+        </div>
+        <div>
+          <dt>네 칸 중</dt>
+          <dd title={cellTitle(it.cell)}>{cellLabel(it.cell)}</dd>
         </div>
       </dl>
 
@@ -744,14 +787,16 @@ function ItemDetailPanel({
         <section className="detail-recast">
           {recastAsk === null ? (
             <button type="button" className="btn btn-quiet" onClick={askRecast}>
-              {`kind를 ${flipTo}로 뒤집기`}
+              {`${kindLabel(flipTo)}으로 다시 보기`}
             </button>
           ) : (
             <div className="confirm">
-              <p>{`${flipTo}로 뒤집으면 이 항목에 달린 응답 ${recastAsk}건이 버려집니다.`}</p>
+              <p>
+                {`${kindLabel(flipTo)}으로 다시 읽으면 서술이 새로 만들어집니다. 여기에 이미 답한 ${recastAsk}건은 함께 넘어가지 않습니다.`}
+              </p>
               <div className="confirm-btns">
                 <button type="button" className="btn" onClick={doRecast} disabled={pendingAction}>
-                  뒤집는다
+                  다시 읽는다
                 </button>
                 <button type="button" className="btn btn-quiet" onClick={() => setRecastAsk(null)}>
                   그만둔다
